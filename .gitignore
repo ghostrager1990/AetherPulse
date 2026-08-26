@@ -1,0 +1,30 @@
+# Build & Compilation Outputs
+[Bb]in/
+[Oo]bj/
+build/
+out/
+*.obj
+*.exp
+*.lib
+*.pdb
+*.idb
+*.ilk
+*.log
+*.tlog
+
+# IDE & Editor files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Packaging & Archives
+*.zip
+*.7z
+*.tar.gz
+
+# Native Core compiled outputs in root/src
+src/NativeCore/*.exp
+src/NativeCore/*.lib
+src/NativeCore/*.dll

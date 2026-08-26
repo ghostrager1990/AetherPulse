@@ -1,0 +1,351 @@
+<UserControl x:Class="AppUI.Views.ArchitectureInfoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:AppUI.ViewModels"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=vm:ArchitectureInfoViewModel}"
+             d:DesignHeight="1100" d:DesignWidth="850">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="24,20,24,24">
+
+            <!-- Header -->
+            <StackPanel Margin="0,0,0,20">
+                <TextBlock Text="Files &amp; Architecture Guide" Style="{StaticResource TextHeader}" />
+                <TextBlock Text="Technical overview of injected proxy binaries, SDK manifests, and hardware tier support." 
+                           Style="{StaticResource TextSubheader}" Margin="0,4,0,0" />
+            </StackPanel>
+
+            <!-- Banner Card: Modular AMD FidelityFX Runtime Architecture -->
+            <Border Style="{StaticResource CardContainer}">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="🧩 " FontSize="16" VerticalAlignment="Center" Foreground="{StaticResource AmdRedBrush}" />
+                        <TextBlock Text="Modular AMD FidelityFX Runtime Architecture" Style="{StaticResource TextCardTitle}" VerticalAlignment="Center" />
+                    </StackPanel>
+                    <Border Background="#161B22" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="14,12">
+                        <TextBlock Foreground="{StaticResource Brush.Text.Primary}" FontSize="12.5" TextWrapping="Wrap" LineHeight="18"
+                                   Text="AetherPulse orchestrates official AMD FidelityFX modular runtimes (Upscaler, Frame Generation, Denoiser, and Neural Radiance Cache) alongside native DXGI and Streamline proxy hooks." />
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 0: SDK Versioning Manifest -->
+            <Border Style="{StaticResource CardContainer}">
+                <StackPanel>
+                    <TextBlock Text="Active SDK &amp; Runtime Versioning Manifest" Style="{StaticResource TextCardTitle}" Margin="0,0,0,16" />
+
+                    <ItemsControl ItemsSource="{Binding SdkComponents}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#121620" BorderBrush="{StaticResource Brush.Border.Default}" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,10">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="Auto" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <StackPanel Grid.Column="0">
+                                            <StackPanel Orientation="Horizontal">
+                                                <TextBlock Text="{Binding ComponentName}" FontWeight="Bold" Foreground="{StaticResource Brush.Text.Primary}" FontSize="13.5" />
+                                                <Border Background="#220D10" BorderBrush="#4D1C21" BorderThickness="1" CornerRadius="3" Padding="6,1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding TargetArchitecture}" FontSize="10" FontWeight="Bold" Foreground="{StaticResource Brush.Accent.Hover}" />
+                                                </Border>
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding Details}" Foreground="{StaticResource Brush.Text.Secondary}" FontSize="12" Margin="0,3,0,0" TextWrapping="Wrap" />
+                                        </StackPanel>
+
+                                        <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0,0,0">
+                                            <TextBlock Text="{Binding VersionString}" Foreground="{StaticResource Brush.Accent.Hover}" FontWeight="Bold" FontSize="12" HorizontalAlignment="Right" />
+                                            <Border Background="#13231B" BorderBrush="#234E35" BorderThickness="1" CornerRadius="3" Padding="6,1" Margin="0,3,0,0" HorizontalAlignment="Right">
+                                                <TextBlock Text="{Binding Status}" FontSize="10" FontWeight="SemiBold" Foreground="#3FB950" />
+                                            </Border>
+                                        </StackPanel>
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 1: Injected Binaries Breakdown -->
+            <Border Style="{StaticResource CardContainer}">
+                <StackPanel>
+                    <TextBlock Text="Injected Proxy Files &amp; Modular SDK Breakdown" Style="{StaticResource TextCardTitle}" Margin="0,0,0,16" />
+
+                    <!-- File 1: dxgi.dll -->
+                    <Border Background="#121620" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="36" Height="36" Background="#1B2436" BorderBrush="{StaticResource AccentBlueBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,14,0">
+                                <TextBlock Text="⏱" FontSize="18" Foreground="#FFFFFF" Opacity="1.0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="dxgi.dll" Foreground="{StaticResource AccentCyanBrush}" FontWeight="Bold" FontSize="14" />
+                                    <Border Background="#1C2F24" CornerRadius="3" Padding="6,1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="Presentation Hook" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource StatusGreenGlowBrush}" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Intercepts IDXGISwapChain::Present and Present1. Runs the 16-frame rolling Exponential Moving Average (EMA) and schedules sub-millisecond delays using Windows CREATE_WAITABLE_TIMER_HIGH_RESOLUTION to eliminate FSR micro-stutter." 
+                                           Style="{StaticResource TextSubheader}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- File 2: sl.interposer.dll -->
+                    <Border Background="#121620" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="36" Height="36" Background="#1B2436" BorderBrush="{StaticResource AccentBlueBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,14,0">
+                                <TextBlock Text="✦" FontSize="18" Foreground="#FFFFFF" Opacity="1.0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="sl.interposer.dll / nvngx_dlss_d.dll" Foreground="{StaticResource AccentCyanBrush}" FontWeight="Bold" FontSize="14" />
+                                    <Border Background="#2F241C" CornerRadius="3" Padding="6,1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="Streamline Bridge" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource StatusYellowBrush}" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Intercepts NVIDIA Streamline slSetTag and slEvaluateFeature(DLSS_D) calls. Captures raw diffuse/specular radiance, depth, normals, and roughness, rerouting them into an AMD FidelityFX SDK compute shader pass on the incoming ID3D12GraphicsCommandList." 
+                                           Style="{StaticResource TextSubheader}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- File 3: amd_fidelityfx_upscaler_dx12.dll -->
+                    <Border Background="#121620" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="36" Height="36" Background="#1B2436" BorderBrush="{StaticResource AccentBlueBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,14,0">
+                                <TextBlock Text="🚀" FontSize="18" Foreground="#FFFFFF" Opacity="1.0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="amd_fidelityfx_upscaler_dx12.dll" Foreground="{StaticResource AccentCyanBrush}" FontWeight="Bold" FontSize="14" />
+                                    <Border Background="#1C2F24" CornerRadius="3" Padding="6,1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="FidelityFX Upscaler" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource StatusGreenGlowBrush}" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="AMD FidelityFX Super Resolution temporal reconstruction engine." 
+                                           Style="{StaticResource TextSubheader}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- File 4: amd_fidelityfx_framegeneration_dx12.dll -->
+                    <Border Background="#121620" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="36" Height="36" Background="#1B2436" BorderBrush="{StaticResource AccentBlueBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,14,0">
+                                <TextBlock Text="⚡" FontSize="18" Foreground="#FFFFFF" Opacity="1.0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="amd_fidelityfx_framegeneration_dx12.dll" Foreground="{StaticResource AccentCyanBrush}" FontWeight="Bold" FontSize="14" />
+                                    <Border Background="#201C2F" CornerRadius="3" Padding="6,1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="Frame Generation" FontSize="10" FontWeight="SemiBold" Foreground="#BC8CFF" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Optical flow frame generation and swapchain interpolation runtime." 
+                                           Style="{StaticResource TextSubheader}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- File 5: amd_fidelityfx_denoiser_dx12.dll & radiancecache -->
+                    <Border Background="#121620" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="36" Height="36" Background="#1B2436" BorderBrush="{StaticResource AccentBlueBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,14,0">
+                                <TextBlock Text="🖩" FontSize="18" Foreground="#FFFFFF" Opacity="1.0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="amd_fidelityfx_denoiser_dx12.dll &amp; radiancecache_dx12.dll" Foreground="{StaticResource AccentCyanBrush}" FontWeight="Bold" FontSize="14" />
+                                    <Border Background="#2C1D3A" CornerRadius="3" Padding="6,1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="Ray Regen &amp; NRC" FontSize="10" FontWeight="SemiBold" Foreground="#D2A8FF" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Official FidelityFX Ray Regeneration wavelet denoiser and Neural Radiance Cache (NRC) probe accelerator." 
+                                           Style="{StaticResource TextSubheader}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- File 6: amd_ags_x64.dll & amd_acs_x64.dll -->
+                    <Border Background="#121620" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="36" Height="36" Background="#1B2436" BorderBrush="{StaticResource AccentBlueBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,14,0">
+                                <TextBlock Text="⚙" FontSize="18" Foreground="#FFFFFF" Opacity="1.0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="amd_ags_x64.dll &amp; amd_acs_x64.dll" Foreground="{StaticResource AccentCyanBrush}" FontWeight="Bold" FontSize="14" />
+                                    <Border Background="#2F241C" CornerRadius="3" Padding="6,1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="GPU &amp; Compute Services" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource StatusYellowBrush}" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="AMD GPU Services and Compute Services hardware communication layer." 
+                                           Style="{StaticResource TextSubheader}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- File 7: aetherpulse.ini -->
+                    <Border Background="#121620" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="36" Height="36" Background="#1B2436" BorderBrush="{StaticResource AccentBlueBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,14,0">
+                                <TextBlock Text="⚙" FontSize="18" Foreground="#FFFFFF" Opacity="1.0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="aetherpulse.ini" Foreground="{StaticResource AccentCyanBrush}" FontWeight="Bold" FontSize="14" />
+                                    <Border Background="#201C2F" CornerRadius="3" Padding="6,1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="Runtime Config" FontSize="10" FontWeight="SemiBold" Foreground="#BC8CFF" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Per-game runtime configuration placed in the game executable root. Stores target frame rate caps, half-interval cadence toggles, wavelet filter iteration counts, roughness gating, and color space correction flags." 
+                                           Style="{StaticResource TextSubheader}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- File 8: AetherTelemetry Shared Memory -->
+                    <Border Background="#121620" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="36" Height="36" Background="#1B2436" BorderBrush="{StaticResource AccentBlueBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,14,0">
+                                <TextBlock Text="📡" FontSize="18" Foreground="#FFFFFF" Opacity="1.0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Local\AetherPulseTelemetry (Shared Memory)" Foreground="{StaticResource AccentCyanBrush}" FontWeight="Bold" FontSize="14" />
+                                    <Border Background="#1C2F24" CornerRadius="3" Padding="6,1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="Zero-Overhead IPC" FontSize="10" FontWeight="SemiBold" Foreground="{StaticResource StatusGreenGlowBrush}" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Windows Named Shared Memory mapping (154-byte pack-1 struct). Streams live FPS, frame times, jitter, and dropped deadlines asynchronously to the WPF UI at 60 Hz without allocating or impacting game render threads." 
+                                           Style="{StaticResource TextSubheader}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- File 9: RCAS_CS.cso & Sampler LOD Bias Interception -->
+                    <Border Background="#121620" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Grid.Column="0" Width="36" Height="36" Background="#1B2436" BorderBrush="{StaticResource AccentBlueBrush}" BorderThickness="1" CornerRadius="6" Margin="0,0,14,0">
+                                <TextBlock Text="🔲" FontSize="18" Foreground="#FFFFFF" Opacity="1.0" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="RCAS_CS.cso &amp; Sampler MipLODBias Pipeline" Foreground="{StaticResource AccentCyanBrush}" FontWeight="Bold" FontSize="14" />
+                                    <Border Background="#2C1D3A" CornerRadius="3" Padding="6,1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="FidelityFX RCAS &amp; Clarity" FontSize="10" FontWeight="SemiBold" Foreground="#D2A8FF" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Injects post-upscaled Robust Contrast Adaptive Sharpening (RCAS) compute passes on back-buffers and clamps negative texture Mipmap LOD Bias (-0.5 * log2(scale)) to restore sub-pixel clarity without texture shimmering." 
+                                           Style="{StaticResource TextSubheader}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 2: AMD Radeon Hardware Tier Support -->
+            <Border Style="{StaticResource CardContainer}">
+                <StackPanel>
+                    <TextBlock Text="AMD Radeon Hardware Tier Support" Style="{StaticResource TextCardTitle}" Margin="0,0,0,16" />
+
+                    <!-- Tier 1: RDNA 4 -->
+                    <Border Background="#131B2A" BorderBrush="{StaticResource AccentBlueBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="RDNA 4 (RX 9000 Series)" Foreground="#FFFFFF" FontWeight="Bold" FontSize="13" />
+                                <TextBlock Text="Ultra Tier" Foreground="{StaticResource AccentCyanBrush}" FontSize="11" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Full Hardware ML Ray Regeneration + Neural Frame Generation" Foreground="{StaticResource StatusGreenGlowBrush}" FontWeight="SemiBold" FontSize="12" />
+                                <TextBlock Text="Highest quality 4-pass spatial wavelet filter with dedicated AI tensor matrix acceleration." Style="{StaticResource TextSubheader}" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Tier 2: RDNA 3 -->
+                    <Border Background="#121620" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="RDNA 3 (RX 7000 Series)" Foreground="#FFFFFF" FontWeight="Bold" FontSize="13" />
+                                <TextBlock Text="Performance Tier" Foreground="{StaticResource AccentCyanBrush}" FontSize="11" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Analytical Ray Regeneration + FSR 3.1 / 4.0 INT8 Frame Generation" Foreground="{StaticResource AccentCyanBrush}" FontWeight="SemiBold" FontSize="12" />
+                                <TextBlock Text="Dual-issue compute wavelet filtering with WMMA accelerated spatial denoising." Style="{StaticResource TextSubheader}" Margin="0,2,0,0" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Tier 3: RDNA 2 -->
+                    <Border Background="#121620" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" CornerRadius="6" Padding="14,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="200" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="RDNA 2 (RX 6000 Series)" Foreground="#FFFFFF" FontWeight="Bold" FontSize="13" />
+                                <TextBlock Text="Mainstream Tier" Foreground="{StaticResource AccentCyanBrush}" FontSize="11" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="Standard SIMD Analytical Wavelet Denoiser + Half-Interval Pacing" Foreground="{StaticResource StatusYellowBrush}" FontWeight="SemiBold" FontSize="12" />
+                                <TextBlock Text="Executes pure HLSL CS 6.0 à-trous wavelet denoising on general compute units, bypassing unsupported ML tensor instructions. Fully supports DXGI waitable timer frame pacing and latency reduction." 
+                                           Style="{StaticResource TextSubheader}" Margin="0,2,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

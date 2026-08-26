@@ -1,0 +1,30 @@
+LIBRARY AetherPulseCore
+EXPORTS
+    ; DXGI exports (for dxgi.dll drop-in)
+    CreateDXGIFactory           = ProxyCreateDXGIFactory
+    CreateDXGIFactory1          = ProxyCreateDXGIFactory1
+    CreateDXGIFactory2          = ProxyCreateDXGIFactory2
+    DXGID3D10CreateDevice       = ProxyDXGID3D10CreateDevice
+    DXGID3D10RegisterLayers     = ProxyDXGID3D10RegisterLayers
+    DXGIGetDebugInterface1      = ProxyDXGIGetDebugInterface1
+    DXGIDumpLiveObjects         = ProxyDXGIDumpLiveObjects
+
+    ; Streamline exports (for sl.interposer.dll drop-in)
+    slInit
+    slShutdown
+    slIsFeatureSupported
+    slGetFeatureRequirements
+    slIsFeatureLoaded
+    slSetFeatureLoaded
+    slSetTag
+    slEvaluateFeature
+    slAllocateResources
+    slFreeResources
+
+    ; Direct NVNGX exports (for nvngx.dll drop-in)
+    NVSDK_NGX_D3D12_Init
+    NVSDK_NGX_D3D12_Shutdown
+    NVSDK_NGX_D3D12_CreateFeature
+    NVSDK_NGX_D3D12_ReleaseFeature
+    NVSDK_NGX_D3D12_EvaluateFeature
+    NVSDK_NGX_D3D12_GetScratchBufferSize

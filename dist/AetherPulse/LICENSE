@@ -1,0 +1,25 @@
+Proprietary Software License Agreement
+AetherPulse Early Access & Closed Beta Program
+Copyright © 2026 Stanorius Software. All rights reserved.
+
+IMPORTANT — READ CAREFULLY:
+This Software License Agreement ("Agreement") is a legal agreement between you ("Licensee") and Stanorius Software ("Licensor") for the software product AetherPulse, including its executable binaries, dynamic link libraries (AetherPulseCore.dll, dxgi.dll, sl.interposer.dll), shader bytecode, documentation, and user interface ("Software").
+
+1. GRANT OF LICENSE
+Subject to the terms of this Agreement, Licensor grants Licensee a personal, non-exclusive, non-transferable, revocable license to install and run the Software solely for personal, non-commercial evaluation, frame pacing optimization, and FidelityFX / FSR 4 compatibility testing in single-player, offline environments.
+
+2. RESTRICTIONS
+Licensee shall NOT:
+(a) Modify, reverse engineer, decompile, disassemble, or derive source code from any pre-compiled binaries or shaders, except to the extent permitted by applicable law;
+(b) Distribute, sublicense, lease, rent, loan, or commercialize the Software without express prior written consent from Stanorius Software;
+(c) Utilize the Software, including any DLL injection, memory mapping, or API interception techniques, in connection with any multiplayer, competitive, online, or anti-cheat-protected video game;
+(d) Remove, obscure, or alter any copyright notices, trademarks, or proprietary markings on or within the Software.
+
+3. DISCLAIMER OF WARRANTIES
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. IN NO EVENT SHALL STANORIUS SOFTWARE BE LIABLE FOR ANY CLAIM, DAMAGES, GAME ACCOUNT SUSPENSIONS, HARDWARE CRASHES, OR OTHER LIABILITY ARISING FROM OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+4. TERMINATION
+This Agreement is effective until terminated. Your rights under this license will terminate automatically without notice from Licensor if you fail to comply with any of its terms. Upon termination, you must destroy all copies of the Software.
+
+5. GOVERNING LAW
+This Agreement shall be governed by and construed in accordance with the laws of the jurisdiction of the author, without regard to its conflict of law principles.

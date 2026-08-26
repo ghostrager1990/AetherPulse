@@ -1,0 +1,350 @@
+<UserControl x:Class="AppUI.Views.GameLibraryView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:AppUI.ViewModels"
+             xmlns:models="clr-namespace:AppUI.Models"
+             mc:Ignorable="d" 
+             d:DataContext="{d:DesignInstance Type=vm:GameLibraryViewModel}"
+             d:DesignHeight="750" d:DesignWidth="850">
+    <Grid>
+        <!-- Main Library View -->
+        <Grid Margin="24,20,24,24">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <!-- View Header & Action Bar -->
+            <Grid Grid.Row="0" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Game Library" Style="{StaticResource TextHeader}" />
+                    <TextBlock Text="Manage game profiles, proxy hook deployment, and launch settings." 
+                               Style="{StaticResource TextSubheader}" Margin="0,4,0,0" />
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Button Content="+ Add Game" Style="{StaticResource BtnPrimary}" Click="OnAddGameClick" Margin="0,0,8,0" />
+                    <Button Content="Auto-Scan Installed" Style="{StaticResource BtnSecondary}" Command="{Binding AutoScanGamesCommand}" IsEnabled="{Binding IsScanning, Converter={StaticResource BoolToBrushConverter}}" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Status & Filter Bar -->
+            <Border Grid.Row="1" Background="#141720" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,0,0,16">
+                <Grid>
+                    <TextBlock Text="{Binding StatusMessage, FallbackValue='Ready'}" Foreground="{StaticResource TextSecondaryBrush}" VerticalAlignment="Center" FontSize="12" />
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock Text="Total Games: " Foreground="{StaticResource TextSecondaryBrush}" FontSize="12" />
+                        <TextBlock Text="{Binding GameProfiles.Count}" Foreground="{StaticResource AccentCyanBrush}" FontWeight="Bold" FontSize="12" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Games Grid / List -->
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding GameProfiles}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type models:GameProfile}">
+                            <Border Style="{StaticResource CardContainer}" Margin="0,0,0,10">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- Game Icon / Avatar -->
+                                    <Border Grid.Column="0" Width="48" Height="48" Background="#1E2433" CornerRadius="6" Margin="0,0,16,0">
+                                        <TextBlock Text="🎮" FontSize="22" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+
+                                    <!-- Game Details -->
+                                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                            <TextBlock Text="{Binding GameName}" Style="{StaticResource TextCardTitle}" Margin="0,0,10,0" />
+                                            
+                                            <!-- Mode Badge -->
+                                            <Border Style="{StaticResource BadgeMode}" Margin="0,0,6,0">
+                                                <TextBlock Text="{Binding Mode}" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource AccentCyanBrush}" />
+                                            </Border>
+
+                                            <!-- Hook Status Badge -->
+                                            <Border Background="{Binding IsHookDeployed, Converter={StaticResource BoolToBrushConverter}}" CornerRadius="4" Padding="6,2" Margin="0,0,6,0">
+                                                <TextBlock Text="{Binding IsHookDeployed, Converter={StaticResource BoolToStatusTextConverter}, ConverterParameter='Deployed:Clean'}" 
+                                                           FontSize="11" FontWeight="SemiBold" Foreground="#FFFFFF" />
+                                            </Border>
+
+                                            <!-- Anti-Cheat Warning Badge -->
+                                            <Border Background="#3D1418" BorderBrush="#E01E26" BorderThickness="1" CornerRadius="4" Padding="6,2" Margin="0,0,6,0"
+                                                    Visibility="{Binding HasAntiCheatWarning, Converter={StaticResource BoolToVisConverter}}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <TextBlock Text="⚠️ " FontSize="10" VerticalAlignment="Center" />
+                                                    <TextBlock Text="Anti-Cheat Protected" FontSize="10.5" FontWeight="Bold" Foreground="#FF7B85" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                            </Border>
+
+                                            <!-- Running Status Badge -->
+                                            <Border Style="{StaticResource BadgeRunning}" Visibility="{Binding IsGameRunning, Converter={StaticResource BoolToVisConverter}}">
+                                                <TextBlock Text="IN-GAME" FontSize="10" FontWeight="Bold" Foreground="{StaticResource StatusGreenGlowBrush}" />
+                                            </Border>
+                                        </StackPanel>
+
+                                        <!-- Executable Path -->
+                                        <TextBlock Text="{Binding ExecutablePath}" Style="{StaticResource TextSubheader}" FontSize="11" />
+                                    </StackPanel>
+
+                                    <!-- Action Buttons -->
+                                    <WrapPanel Grid.Column="2" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                        <Button Content="⚙ Tune" Style="{StaticResource BtnSecondary}" Height="30" Padding="10,4" Margin="2,3"
+                                                Command="{Binding DataContext.TuneGameCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
+
+                                        <Button Content="Deploy" Style="{StaticResource BtnPrimary}" Height="30" Padding="12,4" Margin="2,3"
+                                                Command="{Binding DataContext.DeployCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
+
+                                        <Button Content="Uninstall Hook" Style="{StaticResource BtnSecondary}" Height="30" Padding="10,4" Margin="2,3"
+                                                Command="{Binding DataContext.RemoveHookCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
+
+                                        <Button Content="▶ Launch" Style="{StaticResource BtnSecondary}" Height="30" Padding="12,4" Margin="2,3"
+                                                Command="{Binding DataContext.LaunchGameCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}" />
+
+                                        <Button Content="✕ Remove" Style="{StaticResource BtnDanger}" Height="30" Padding="10,4" Margin="2,3"
+                                                Command="{Binding DataContext.DeleteGameFromLibraryCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding}"
+                                                ToolTip="Removes this game from your library and ignores it in future scans." />
+                                    </WrapPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Library Footer Note -->
+            <Border Grid.Row="3" Background="#10131A" BorderBrush="{StaticResource Brush.Border.Default}" BorderThickness="1" CornerRadius="6" Padding="12,8" Margin="0,12,0,0">
+                <TextBlock Text="⚠️ D3D12/Streamline proxy injection is intended for offline and single-player titles. Online games with anti-cheat software may block or flag runtime proxy DLLs." 
+                           Foreground="{StaticResource Brush.Text.Muted}" FontSize="11" TextWrapping="Wrap" />
+            </Border>
+        </Grid>
+
+        <!-- Compatibility Verification Warning Modal Dialog -->
+        <Grid Background="#B0000000" 
+              Visibility="{Binding ValidationFailureModalVisible, Converter={StaticResource BoolToVisConverter}}"
+              Panel.ZIndex="100">
+            <Border Background="#15181E" 
+                    BorderBrush="#E01E26" 
+                    BorderThickness="1.5" 
+                    CornerRadius="8" 
+                    MaxWidth="480" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center" 
+                    Padding="22">
+                <StackPanel>
+                    <!-- Modal Header -->
+                    <TextBlock Text="⚠️ Compatibility Verification Failed" 
+                               FontSize="15" 
+                               FontWeight="Bold" 
+                               Foreground="#FF424D" 
+                               Margin="0,0,0,4" />
+
+                    <!-- Target Executable Name -->
+                    <TextBlock Text="{Binding ValidationTargetName, StringFormat='Target: {0}'}" 
+                               FontSize="12" 
+                               FontWeight="SemiBold" 
+                               Foreground="{StaticResource Brush.Text.Secondary}" 
+                               Margin="0,0,0,10" />
+
+                    <TextBlock Text="The selected game does not meet all required injection criteria:" 
+                               Foreground="#C9D1D9" 
+                               FontSize="12.5" 
+                               Margin="0,0,0,12" />
+
+                    <!-- Diagnostic Checklist Box -->
+                    <Border Background="#220D10" 
+                            BorderBrush="#4D1C21" 
+                            BorderThickness="1" 
+                            CornerRadius="6" 
+                            Padding="12" 
+                            Margin="0,0,0,14">
+                        <StackPanel>
+                            <!-- Row 1: Direct3D 12 API -->
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Direct3D 12 (D3D12) API" FontSize="12.5" FontWeight="SemiBold" Foreground="#F0F3F6" VerticalAlignment="Center" />
+                                
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="✓ Passed (D3D12 Detected)" 
+                                               Foreground="#3FB950" 
+                                               FontWeight="Bold" 
+                                               FontSize="12"
+                                               Visibility="{Binding IsDx12Passed, Converter={StaticResource BoolToVisConverter}}" />
+                                    <TextBlock Text="✗ Failed (Requires DirectX 12)" 
+                                               Foreground="#FF424D" 
+                                               FontWeight="Bold" 
+                                               FontSize="12"
+                                               Visibility="{Binding IsDx12Passed, Converter={StaticResource InverseBoolToVisConverter}}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Separator Background="#4D1C21" Margin="0,0,0,8" />
+
+                            <!-- Row 2: DLSS / Streamline Hook -->
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="DLSS / Streamline Hook" FontSize="12.5" FontWeight="SemiBold" Foreground="#F0F3F6" VerticalAlignment="Center" />
+
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="✓ Passed (DLSS/Streamline Found)" 
+                                               Foreground="#3FB950" 
+                                               FontWeight="Bold" 
+                                               FontSize="12"
+                                               Visibility="{Binding IsDlssPassed, Converter={StaticResource BoolToVisConverter}}" />
+                                    <TextBlock Text="✗ Failed (Missing nvngx_dlss.dll / Streamline)" 
+                                               Foreground="#FF424D" 
+                                               FontWeight="Bold" 
+                                               FontSize="12"
+                                               Visibility="{Binding IsDlssPassed, Converter={StaticResource InverseBoolToVisConverter}}" />
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Plain-English Explanation Note -->
+                    <TextBlock Text="AetherPulse frame pacing and Ray Regeneration intercept Direct3D 12 swapchains and Streamline buffer tags. Without these, runtime injection may not take effect." 
+                               Foreground="{StaticResource Brush.Text.Secondary}" 
+                               FontSize="11.5" 
+                               TextWrapping="Wrap" 
+                               LineHeight="16" 
+                               Margin="0,0,0,18" />
+
+                    <!-- Footer Action Buttons -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0" 
+                                Content="Cancel Import" 
+                                Style="{StaticResource BtnSecondary}" 
+                                Height="34" 
+                                Command="{Binding CancelValidationModalCommand}" />
+
+                        <Button Grid.Column="2" 
+                                Content="Force Add Anyway" 
+                                Background="#3D1418" 
+                                Foreground="#FF7B85" 
+                                BorderBrush="#E01E26" 
+                                BorderThickness="1" 
+                                Height="34" 
+                                Cursor="Hand" 
+                                FontWeight="SemiBold"
+                                Command="{Binding ConfirmForceAddGameCommand}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Glaring Anti-Cheat Hazard Warning & Liability Waiver Modal -->
+        <Grid Background="#B0000000" 
+              Visibility="{Binding AntiCheatModalVisible, Converter={StaticResource BoolToVisConverter}}"
+              Panel.ZIndex="110">
+            <Border Background="#15181E" 
+                    BorderBrush="#FF3838" 
+                    BorderThickness="1.5" 
+                    CornerRadius="8" 
+                    MaxWidth="520" 
+                    HorizontalAlignment="Center" 
+                    VerticalAlignment="Center" 
+                    Padding="22">
+                <StackPanel>
+                    <!-- Header -->
+                    <TextBlock Text="🚨 HIGH RISK: ONLINE / ANTI-CHEAT PROTECTED GAME" 
+                               FontSize="14.5" 
+                               FontWeight="Bold" 
+                               Foreground="#FF3838" 
+                               Margin="0,0,0,4" />
+
+                    <!-- Game & Detected System -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <TextBlock Text="{Binding AntiCheatTargetGameName, StringFormat='Target: {0}'}" 
+                                   FontSize="12.5" 
+                                   FontWeight="SemiBold" 
+                                   Foreground="#F0F3F6" 
+                                   Margin="0,0,12,0" />
+                        <Border Background="#3D1418" BorderBrush="#E01E26" BorderThickness="1" CornerRadius="4" Padding="6,2">
+                            <TextBlock Text="{Binding AntiCheatDetectedSystem, StringFormat='System: {0}'}" 
+                                       FontSize="11" 
+                                       FontWeight="Bold" 
+                                       Foreground="#FF7B85" />
+                        </Border>
+                    </StackPanel>
+
+                    <!-- Warning Callout -->
+                    <Border Background="#250D11" BorderBrush="#5C1820" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,12">
+                        <StackPanel>
+                            <TextBlock Text="Explicit Ban Warning:" FontWeight="Bold" Foreground="#FF5E68" FontSize="12" Margin="0,0,0,4" />
+                            <TextBlock Text="Injecting runtime proxy DLLs (dxgi.dll / sl.interposer.dll) into games with active anti-cheat systems can be flagged as unauthorized third-party software and may result in an immediate, permanent ACCOUNT BAN." 
+                                       Foreground="#E6EDF3" FontSize="11.5" TextWrapping="Wrap" LineHeight="16" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Developer Liability Waiver -->
+                    <Border Background="#121620" BorderBrush="{StaticResource Brush.Border.Default}" BorderThickness="1" CornerRadius="6" Padding="12" Margin="0,0,0,14">
+                        <StackPanel>
+                            <TextBlock Text="Developer Liability Waiver:" FontWeight="Bold" Foreground="{StaticResource Brush.Text.Secondary}" FontSize="12" Margin="0,0,0,4" />
+                            <TextBlock Text="AetherPulse and Stanorius Software are strictly built for single-player and offline rendering enhancements. The software and developer assume ZERO responsibility or liability for account suspensions, penalties, or bans incurred on multiplayer servers." 
+                                       Foreground="{StaticResource Brush.Text.Muted}" FontSize="11" TextWrapping="Wrap" LineHeight="15" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Mandatory Acknowledgment Checkbox -->
+                    <CheckBox IsChecked="{Binding AntiCheatLiabilityAcknowledged, Mode=TwoWay}" 
+                              Margin="0,0,0,18" 
+                              Cursor="Hand">
+                        <TextBlock Text="I understand the severe risk of account bans and assume full personal responsibility." 
+                                   Foreground="#F0F3F6" 
+                                   FontWeight="SemiBold" 
+                                   FontSize="12" 
+                                   TextWrapping="Wrap" />
+                    </CheckBox>
+
+                    <!-- Modal Actions -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="10" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Button Grid.Column="0" 
+                                Content="Cancel (Recommended / Safe)" 
+                                Style="{StaticResource BtnSecondary}" 
+                                Height="36" 
+                                Command="{Binding CancelAntiCheatModalCommand}" />
+
+                        <Button Grid.Column="2" 
+                                Content="Proceed at Own Risk" 
+                                Style="{StaticResource BtnDanger}" 
+                                Height="36" 
+                                IsEnabled="{Binding AntiCheatLiabilityAcknowledged}"
+                                Command="{Binding ConfirmAntiCheatDeployCommand}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>
