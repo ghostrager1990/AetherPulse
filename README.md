@@ -1,4 +1,4 @@
-# AetherPulse v1.1.1
+# AetherPulse v1.1.1 (!!!!STILL UNDER TESTING!!!!)
 
 **AMD FidelityFX & FSR Bridge Suite**  
 *Real-time DirectX 12 / Streamline Frame Pacing, Multi-Frame Generation, FidelityFX Ray Regeneration, and FSR Upscaling Engine.*
