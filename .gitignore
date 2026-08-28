@@ -1,0 +1,15 @@
+﻿# Build & Publish output
+bin/
+obj/
+dist/
+payload/
+*.dll
+*.exe
+*.pdb
+*.obj
+*.exp
+*.lib
+*.zip
+*.user
+.vs/
+.vscode/
