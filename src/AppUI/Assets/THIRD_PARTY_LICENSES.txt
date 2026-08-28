@@ -1,0 +1,23 @@
+AetherPulse Third-Party Licenses & Attributions
+================================================
+
+This application incorporates or orchestrates technologies from the following open-source projects:
+
+1. OptiScaler
+   - Copyright (c) cdozdil and OptiScaler contributors
+   - License: MIT License / LGPL-2.1
+   - Description: All-in-one DLSS/FSR/XeSS upscaler and Frame Generation / Ray Reconstruction bridge.
+   - Project: https://github.com/cdozdil/OptiScaler
+
+2. FakeNVAPI
+   - Copyright (c) cdozdil and FakeNVAPI contributors
+   - License: MIT License
+   - Description: Hardware spoofing and NVAPI query interface emulation layer.
+
+3. MinHook - The Minimalistic API Hooking Library for x64/x86
+   - Copyright (c) 2009-2017 Tsuda Kageyu. All rights reserved.
+   - License: 2-Clause BSD License
+
+4. AMD FidelityFX SDK
+   - Copyright (c) Advanced Micro Devices, Inc.
+   - License: MIT License

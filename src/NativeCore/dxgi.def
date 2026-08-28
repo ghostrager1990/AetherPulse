@@ -1,0 +1,7 @@
+LIBRARY dxgi.dll
+EXPORTS
+    CreateDXGIFactory = Proxy_CreateDXGIFactory
+    CreateDXGIFactory1 = Proxy_CreateDXGIFactory1
+    CreateDXGIFactory2 = Proxy_CreateDXGIFactory2
+    DXGIDumpJournal = Proxy_DXGIDumpJournal
+    DXGIReportAdapterConfiguration = Proxy_DXGIReportAdapterConfiguration
