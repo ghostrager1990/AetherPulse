@@ -7,6 +7,7 @@
 #include <cmath>
 #include <algorithm>
 #include <string>
+#include <atomic>
 
 #pragma comment(linker, "/export:GetFileVersionInfoA=C:\\Windows\\System32\\version.GetFileVersionInfoA")
 #pragma comment(linker, "/export:GetFileVersionInfoByHandle=C:\\Windows\\System32\\version.GetFileVersionInfoByHandle")
@@ -30,18 +31,28 @@
 #pragma comment(lib, "dxgi.lib")
 #pragma comment(lib, "user32.lib")
 
+#ifndef CREATE_WAITABLE_TIMER_HIGH_RESOLUTION
+#define CREATE_WAITABLE_TIMER_HIGH_RESOLUTION 0x00000002
+#endif
+
 struct RuntimeConfig {
-    bool enablePacing = true;
-    int targetFps = 0;
-    bool overrideRCAS = true;
-    float rcasSharpness = 0.35f;
+    std::atomic<bool> enablePacing{ true };
+    std::atomic<int> targetFps{ 0 };
+    std::atomic<bool> overrideRCAS{ true };
+    std::atomic<float> rcasSharpness{ 0.35f };
 };
 
 static RuntimeConfig g_Config;
+static std::atomic<bool> g_Running{ true };
 static uint64_t g_FrameCount = 0;
 static double g_FrametimeMs = 0.0;
 static double g_OnePercentLowFps = 0.0;
 static double g_StutterPercent = 0.0;
+static double g_PacingJitterMs = 0.0;
+static int g_DrainUncapFrames = 0;
+
+static HANDLE g_hWaitableTimer = nullptr;
+static LARGE_INTEGER g_qpcFreq{ 0 };
 
 typedef HRESULT(WINAPI* PFN_Present)(IDXGISwapChain*, UINT, UINT);
 typedef HRESULT(WINAPI* PFN_Present1)(IDXGISwapChain1*, UINT, UINT, const DXGI_PRESENT_PARAMETERS*);
@@ -49,18 +60,51 @@ typedef HRESULT(WINAPI* PFN_Present1)(IDXGISwapChain1*, UINT, UINT, const DXGI_P
 static PFN_Present g_OriginalPresent = nullptr;
 static PFN_Present1 g_OriginalPresent1 = nullptr;
 
-void ReadConfig() {
+static std::string Trim(const std::string& str) {
+    size_t first = str.find_first_not_of(" \t\r\n");
+    if (first == std::string::npos) return "";
+    size_t last = str.find_last_not_of(" \t\r\n");
+    return str.substr(first, (last - first + 1));
+}
+
+void ReadConfigFile() {
     std::ifstream file("C:\\Users\\Public\\aetherpulse.ini");
     if (!file.is_open()) return;
+
     std::string line;
     while (std::getline(file, line)) {
+        line = Trim(line);
+        if (line.empty() || line[0] == ';' || line[0] == '#') continue;
+
+        size_t eq = line.find('=');
+        if (eq == std::string::npos) continue;
+
+        std::string key = Trim(line.substr(0, eq));
+        std::string val = Trim(line.substr(eq + 1));
+
         try {
-            if (line.find("enablePacing=") != std::string::npos) g_Config.enablePacing = std::stoi(line.substr(line.find("=") + 1)) != 0;
-            else if (line.find("targetFps=") != std::string::npos) g_Config.targetFps = std::stoi(line.substr(line.find("=") + 1));
-            else if (line.find("overrideRCAS=") != std::string::npos) g_Config.overrideRCAS = std::stoi(line.substr(line.find("=") + 1)) != 0;
-            else if (line.find("rcasSharpness=") != std::string::npos) g_Config.rcasSharpness = std::stof(line.substr(line.find("=") + 1));
+            if (_stricmp(key.c_str(), "targetFps") == 0 || _stricmp(key.c_str(), "targetFpsCap") == 0) {
+                g_Config.targetFps.store(std::stoi(val));
+            }
+            else if (_stricmp(key.c_str(), "enablePacing") == 0) {
+                g_Config.enablePacing.store(_stricmp(val.c_str(), "true") == 0 || val == "1");
+            }
+            else if (_stricmp(key.c_str(), "overrideRCAS") == 0 || _stricmp(key.c_str(), "RCASSharpening") == 0) {
+                g_Config.overrideRCAS.store(_stricmp(val.c_str(), "true") == 0 || val == "1");
+            }
+            else if (_stricmp(key.c_str(), "rcasSharpness") == 0 || _stricmp(key.c_str(), "sharpness") == 0) {
+                g_Config.rcasSharpness.store(std::stof(val));
+            }
         } catch (...) {}
     }
+}
+
+DWORD WINAPI ConfigWatcherThread(LPVOID) {
+    while (g_Running.load()) {
+        ReadConfigFile();
+        Sleep(20);
+    }
+    return 0;
 }
 
 void WriteStatus() {
@@ -72,40 +116,79 @@ void WriteStatus() {
          << "  \"frametimeMs\": " << g_FrametimeMs << ",\n"
          << "  \"onePercentLowFps\": " << g_OnePercentLowFps << ",\n"
          << "  \"stutterPercent\": " << g_StutterPercent << ",\n"
-         << "  \"targetFps\": " << g_Config.targetFps << ",\n"
-         << "  \"rcasSharpness\": " << g_Config.rcasSharpness << ",\n"
+         << "  \"pacingJitterMs\": " << g_PacingJitterMs << ",\n"
+         << "  \"targetFps\": " << g_Config.targetFps.load() << ",\n"
+         << "  \"rcasSharpness\": " << g_Config.rcasSharpness.load() << ",\n"
          << "  \"timestamp\": " << GetTickCount64() << ",\n"
-         << "  \"pacing\": " << (g_Config.enablePacing ? "true" : "false") << ",\n"
+         << "  \"pacing\": " << (g_Config.enablePacing.load() ? "true" : "false") << ",\n"
          << "  \"rayRegen\": true\n"
          << "}\n";
 }
 
-void ProcessFrameCadence() {
-    static auto frameTargetDeadline = std::chrono::high_resolution_clock::now();
-    static auto lastPresentTime = std::chrono::high_resolution_clock::now();
+void ProcessCadence() {
+    static int64_t lastPresentQpc = 0;
+    static int lastCap = 0;
+    
+    LARGE_INTEGER nowQpc;
+    QueryPerformanceCounter(&nowQpc);
+    int64_t currentQpc = nowQpc.QuadPart;
 
-    // 1. Precise frame interval pacing
-    if (g_Config.enablePacing && g_Config.targetFps > 0) {
-        auto targetInterval = std::chrono::nanoseconds((uint64_t)(1000000000.0 / g_Config.targetFps));
-        
-        // Spin-wait until target deadline is reached
-        while (std::chrono::high_resolution_clock::now() < frameTargetDeadline) {
-            YieldProcessor();
+    int targetCap = g_Config.targetFps.load();
+    bool pacingEnabled = g_Config.enablePacing.load();
+
+    if (targetCap != lastCap) {
+        lastCap = targetCap;
+        lastPresentQpc = currentQpc;
+        g_PacingJitterMs = 0.0;
+        if (targetCap <= 0) {
+            g_DrainUncapFrames = 30;
         }
-        
-        auto now = std::chrono::high_resolution_clock::now();
-        if (now > frameTargetDeadline + targetInterval) {
-            frameTargetDeadline = now + targetInterval;
-        } else {
-            frameTargetDeadline += targetInterval;
-        }
-    } else {
-        frameTargetDeadline = std::chrono::high_resolution_clock::now();
+        return;
     }
 
-    auto now = std::chrono::high_resolution_clock::now();
-    g_FrametimeMs = std::chrono::duration<double, std::milli>(now - lastPresentTime).count();
-    lastPresentTime = now;
+    if (lastPresentQpc == 0) {
+        lastPresentQpc = currentQpc;
+        return;
+    }
+
+    if (pacingEnabled && targetCap > 0) {
+        int64_t targetIntervalQpc = (g_qpcFreq.QuadPart) / targetCap;
+        int64_t targetDeadlineQpc = lastPresentQpc + targetIntervalQpc;
+
+        if (targetDeadlineQpc > currentQpc) {
+            int64_t ticksRemaining = targetDeadlineQpc - currentQpc;
+            int64_t sleep100Ns = -((ticksRemaining * 10000000LL) / g_qpcFreq.QuadPart);
+            if (sleep100Ns < -5000 && g_hWaitableTimer) {
+                LARGE_INTEGER dueTime;
+                dueTime.QuadPart = sleep100Ns;
+                if (SetWaitableTimer(g_hWaitableTimer, &dueTime, 0, nullptr, nullptr, FALSE)) {
+                    WaitForSingleObject(g_hWaitableTimer, INFINITE);
+                }
+            }
+
+            QueryPerformanceCounter(&nowQpc);
+            while (nowQpc.QuadPart < targetDeadlineQpc) {
+                YieldProcessor();
+                QueryPerformanceCounter(&nowQpc);
+            }
+        }
+
+        QueryPerformanceCounter(&nowQpc);
+        int64_t actualPresentQpc = nowQpc.QuadPart;
+        double jitterTicks = (double)std::abs(actualPresentQpc - targetDeadlineQpc);
+        g_PacingJitterMs = (jitterTicks * 1000.0) / (double)g_qpcFreq.QuadPart;
+    } else {
+        g_PacingJitterMs = 0.0;
+        if (g_DrainUncapFrames > 0) {
+            g_DrainUncapFrames--;
+            lastPresentQpc = currentQpc;
+        }
+    }
+
+    QueryPerformanceCounter(&nowQpc);
+    int64_t deltaTicks = nowQpc.QuadPart - lastPresentQpc;
+    g_FrametimeMs = ((double)deltaTicks * 1000.0) / (double)g_qpcFreq.QuadPart;
+    lastPresentQpc = nowQpc.QuadPart;
     g_FrameCount++;
 
     static std::vector<double> history;
@@ -127,23 +210,36 @@ void ProcessFrameCadence() {
     }
 
     if (g_FrameCount % 10 == 0) {
-        ReadConfig();
         WriteStatus();
     }
 }
 
 HRESULT WINAPI HookedPresent(IDXGISwapChain* pSwapChain, UINT SyncInterval, UINT Flags) {
-    ProcessFrameCadence();
+    ProcessCadence();
+    if (g_DrainUncapFrames > 0 && SyncInterval > 0) {
+        SyncInterval = 0;
+    }
     return g_OriginalPresent ? g_OriginalPresent(pSwapChain, SyncInterval, Flags) : S_OK;
 }
 
 HRESULT WINAPI HookedPresent1(IDXGISwapChain1* pSwapChain, UINT SyncInterval, UINT Flags, const DXGI_PRESENT_PARAMETERS* pPresentParameters) {
-    ProcessFrameCadence();
+    ProcessCadence();
+    if (g_DrainUncapFrames > 0 && SyncInterval > 0) {
+        SyncInterval = 0;
+    }
     return g_OriginalPresent1 ? g_OriginalPresent1(pSwapChain, SyncInterval, Flags, pPresentParameters) : S_OK;
 }
 
 DWORD WINAPI HookInitThread(LPVOID) {
     Sleep(1200);
+
+    QueryPerformanceFrequency(&g_qpcFreq);
+    g_hWaitableTimer = CreateWaitableTimerExW(nullptr, nullptr, CREATE_WAITABLE_TIMER_HIGH_RESOLUTION, TIMER_ALL_ACCESS);
+    if (!g_hWaitableTimer) {
+        g_hWaitableTimer = CreateWaitableTimerExW(nullptr, nullptr, 0, TIMER_ALL_ACCESS);
+    }
+
+    CreateThread(nullptr, 0, ConfigWatcherThread, nullptr, 0, nullptr);
 
     WNDCLASSA wc = { 0 };
     wc.lpfnWndProc = DefWindowProcA;
@@ -198,10 +294,16 @@ DWORD WINAPI HookInitThread(LPVOID) {
     return 0;
 }
 
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID reserved) {
-    if (reason == DLL_PROCESS_ATTACH) {
-        DisableThreadLibraryCalls(hModule);
-        CreateThread(nullptr, 0, HookInitThread, nullptr, 0, nullptr);
+namespace RenderHook {
+    DWORD WINAPI InitHookThread(LPVOID param) {
+        return HookInitThread(param);
     }
-    return TRUE;
+
+    void Shutdown() {
+        g_Running.store(false);
+        if (g_hWaitableTimer) {
+            CloseHandle(g_hWaitableTimer);
+            g_hWaitableTimer = nullptr;
+        }
+    }
 }

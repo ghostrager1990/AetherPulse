@@ -4,92 +4,60 @@ using System.Linq;
 
 namespace AppUI.Services
 {
-    public enum RecommendedProxyType
-    {
-        StreamlineInterposer,
-        VersionDll,
-        DxgiDll
-    }
-
     public class GameCapabilityInfo
     {
-        public RecommendedProxyType RecommendedType { get; set; } = RecommendedProxyType.VersionDll;
+        public bool HasOptiScaler { get; set; }
+        public bool HasDxvk { get; set; }
+        public bool HasDirectX12 { get; set; }
+        public bool HasDirectX11 { get; set; }
+        public bool HasVulkan { get; set; }
+        public bool HasNativeAntiLag2 { get; set; }
+        public string AntiCheatName { get; set; } = string.Empty;
         public string BadgeText { get; set; } = string.Empty;
-        public string RecommendationReason { get; set; } = string.Empty;
-        public bool HasStreamline { get; set; }
-        public bool HasReShade { get; set; }
     }
 
     public static class GameInspectionService
     {
-        public static GameCapabilityInfo InspectGame(string? gameDirectory)
+        public static GameCapabilityInfo InspectGame(string installDirectory)
         {
             var info = new GameCapabilityInfo();
-
-            if (string.IsNullOrWhiteSpace(gameDirectory) || !Directory.Exists(gameDirectory))
+            if (string.IsNullOrWhiteSpace(installDirectory) || !Directory.Exists(installDirectory))
             {
-                info.RecommendedType = RecommendedProxyType.VersionDll;
-                info.BadgeText = "🛡️ Standard D3D12/Vulkan (Pacer Mode)";
-                info.RecommendationReason = "Target directory not detected. Defaulting to version.dll presentation pacer.";
                 return info;
             }
 
             try
             {
-                var files = Directory.GetFiles(gameDirectory, "*.*", SearchOption.TopDirectoryOnly);
+                // Inspect Anti-Lag 2 Native presence
+                info.HasNativeAntiLag2 = File.Exists(Path.Combine(installDirectory, "amd_antilag2_dx12.dll")) ||
+                                         File.Exists(Path.Combine(installDirectory, "amd_antilag2.dll")) ||
+                                         Directory.GetFiles(installDirectory, "*antilag*", SearchOption.TopDirectoryOnly).Length > 0;
 
-                bool hasSl = files.Any(f => Path.GetFileName(f).Equals("sl.interposer.dll", StringComparison.OrdinalIgnoreCase) ||
-                                           Path.GetFileName(f).Equals("sl.common.dll", StringComparison.OrdinalIgnoreCase) ||
-                                           Path.GetFileName(f).Equals("sl.dlss.dll", StringComparison.OrdinalIgnoreCase) ||
-                                           Path.GetFileName(f).Equals("sl.dlss_d.dll", StringComparison.OrdinalIgnoreCase) ||
-                                           Path.GetFileName(f).Equals("sl.dlss_g.dll", StringComparison.OrdinalIgnoreCase));
+                // Inspect OptiScaler / DXVK / Wrappers
+                info.HasOptiScaler = File.Exists(Path.Combine(installDirectory, "OptiScaler.ini")) ||
+                                     File.Exists(Path.Combine(installDirectory, "nvngx.dll"));
 
-                if (!hasSl)
+                info.HasDxvk = File.Exists(Path.Combine(installDirectory, "dxvk.conf")) ||
+                               File.Exists(Path.Combine(installDirectory, "d3d11.dll"));
+
+                // Inspect Render Backends
+                info.HasDirectX12 = File.Exists(Path.Combine(installDirectory, "d3d12.dll")) ||
+                                    Directory.GetFiles(installDirectory, "*.exe", SearchOption.TopDirectoryOnly).Length > 0;
+
+                if (info.HasOptiScaler)
                 {
-                    try
-                    {
-                        var subDirs = Directory.GetDirectories(gameDirectory);
-                        foreach (var sub in subDirs)
-                        {
-                            var subFiles = Directory.GetFiles(sub, "*.*", SearchOption.TopDirectoryOnly);
-                            if (subFiles.Any(f => Path.GetFileName(f).Equals("sl.interposer.dll", StringComparison.OrdinalIgnoreCase) ||
-                                                 Path.GetFileName(f).Equals("sl.common.dll", StringComparison.OrdinalIgnoreCase) ||
-                                                 Path.GetFileName(f).Equals("sl.dlss.dll", StringComparison.OrdinalIgnoreCase)))
-                            {
-                                hasSl = true;
-                                break;
-                            }
-                        }
-                    }
-                    catch { }
+                    info.BadgeText = "OptiScaler Chain";
                 }
-
-                bool hasReshade = files.Any(f => Path.GetFileName(f).Equals("dxgi.dll", StringComparison.OrdinalIgnoreCase) ||
-                                                Path.GetFileName(f).Equals("ReShade.ini", StringComparison.OrdinalIgnoreCase) ||
-                                                Path.GetFileName(f).Equals("ReShade64.dll", StringComparison.OrdinalIgnoreCase));
-
-                info.HasStreamline = hasSl;
-                info.HasReShade = hasReshade;
-
-                if (hasSl)
+                else if (info.HasNativeAntiLag2)
                 {
-                    info.RecommendedType = RecommendedProxyType.VersionDll;
-                    info.BadgeText = "✨ FSR Ray Regeneration + Multi-Frame Ready";
-                    info.RecommendationReason = "This title supports D3D12 Ray Tracing. Custom proxy injection (version.dll) provides active SwapChain frame cadence alignment, half-interval pacing, and experimental FidelityFX Ray Regeneration interop.";
+                    info.BadgeText = "Anti-Lag 2 Native";
                 }
-                else
+                else if (info.HasDxvk)
                 {
-                    info.RecommendedType = RecommendedProxyType.VersionDll;
-                    info.BadgeText = "✨ Universal D3D12 (Pacer & Multi-Frame Ready)";
-                    info.RecommendationReason = "This title uses standard DirectX 12. Custom proxy injection (version.dll) provides frame pacing and latency metering.";
+                    info.BadgeText = "DXVK Active";
                 }
             }
-            catch (Exception ex)
-            {
-                info.RecommendedType = RecommendedProxyType.VersionDll;
-                info.BadgeText = "🛡️ Standard D3D12/Vulkan (Pacer Mode)";
-                info.RecommendationReason = $"Inspection error: {ex.Message}. Defaulting to version.dll.";
-            }
+            catch { }
 
             return info;
         }

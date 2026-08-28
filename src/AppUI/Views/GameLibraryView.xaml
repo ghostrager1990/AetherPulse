@@ -10,14 +10,14 @@
              d:DesignHeight="750" d:DesignWidth="850">
     
     <UserControl.Resources>
-        <Style TargetType="ToolTip">
+                <Style TargetType="ToolTip">
             <Setter Property="Background" Value="#1A1C23"/>
             <Setter Property="Foreground" Value="#E0E0E0"/>
             <Setter Property="BorderBrush" Value="#405070"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="10,6"/>
             <Setter Property="FontSize" Value="11.5"/>
-            <Setter Property="MaxWidth" Value="360"/>
+            <Setter Property="MaxWidth" Value="420"/>
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ToolTip">
@@ -26,7 +26,13 @@
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="5"
                                 Padding="{TemplateBinding Padding}">
-                            <ContentPresenter Content="{TemplateBinding Content}"/>
+                            <ContentPresenter Content="{TemplateBinding Content}">
+                                <ContentPresenter.Resources>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="TextWrapping" Value="Wrap"/>
+                                    </Style>
+                                </ContentPresenter.Resources>
+                            </ContentPresenter>
                         </Border>
                     </ControlTemplate>
                 </Setter.Value>

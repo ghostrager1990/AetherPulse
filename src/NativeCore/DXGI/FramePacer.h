@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 
 #include <windows.h>
 #include <dxgi.h>
@@ -43,12 +43,14 @@ private:
 
     LARGE_INTEGER     m_qpcFrequency{ 0 };
     int64_t           m_lastPresentQpc = 0;
+    int64_t           m_lastPostPresentQpc = 0;
     int64_t           m_targetNextPresentQpc = 0;
 
     // Rolling Exponential Moving Average (16-frame window)
     double            m_emaFrameTicks = 0.0;
     bool              m_firstFrame = true;
     uint32_t          m_frameIndex = 0;
+    uint32_t          m_lastObservedFpsCap = 0;
 
     // Telemetry and statistics
     std::atomic<float>    m_currentFps{ 0.0f };

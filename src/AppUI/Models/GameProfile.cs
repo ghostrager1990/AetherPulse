@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Text;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -161,6 +161,9 @@ namespace AppUI.Models
         [ObservableProperty]
         private Services.GameCapabilityInfo _capability = new();
 
+                public bool IsAntiLag2ManagedByGame => Capability?.HasNativeAntiLag2 == true;
+        public bool CanToggleAntiLag2 => !IsAntiLag2ManagedByGame;
+        public string AntiLag2StatusLabel => IsAntiLag2ManagedByGame ? "Managed by Game Engine (Native SDK)" : "DirectX 12 SDK integration aligning game loop cadence with display presentation deadlines.";
         public bool HasCapabilityBadge => !string.IsNullOrEmpty(Capability?.BadgeText);
 
         public void RefreshCapability()
@@ -169,6 +172,9 @@ namespace AppUI.Models
             {
                 Capability = Services.GameInspectionService.InspectGame(InstallDirectory);
                 OnPropertyChanged(nameof(HasCapabilityBadge));
+                OnPropertyChanged(nameof(IsAntiLag2ManagedByGame));
+                OnPropertyChanged(nameof(CanToggleAntiLag2));
+                OnPropertyChanged(nameof(AntiLag2StatusLabel));
                 OnPropertyChanged(nameof(ProxyTypeBadgeText));
                 OnPropertyChanged(nameof(ProxyDisplayLabel));
             }

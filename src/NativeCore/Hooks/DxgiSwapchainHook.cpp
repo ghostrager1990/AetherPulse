@@ -1,4 +1,4 @@
-#include "DxgiSwapchainHook.h"
+﻿#include "DxgiSwapchainHook.h"
 #include "../IPC/SharedMemory.h"
 #include "../DXGI/FramePacer.h"
 #include "../Vendor/MinHook/MinHook.h"
@@ -62,6 +62,14 @@ HRESULT STDMETHODCALLTYPE Hooked_Present(IDXGISwapChain* pThis, UINT SyncInterva
         FramePacer::Get().OnBeforePresent(pThis, SyncInterval, Flags);
         s_inPresent = false;
     }
+    
+    const auto& config = AetherConfig::Get();
+    // Allow tearing when uncapped so DXGI doesn't block on previous VSync cadence
+    if (config.pacing.targetFpsCap == 0) {
+        Flags |= DXGI_PRESENT_ALLOW_TEARING;
+        SyncInterval = 0;
+    }
+
     HRESULT hr = o_Present ? o_Present(pThis, SyncInterval, Flags) : S_OK;
     FramePacer::Get().OnAfterPresent(pThis, hr);
     return hr;
@@ -74,6 +82,13 @@ HRESULT STDMETHODCALLTYPE Hooked_Present1(IDXGISwapChain1* pThis, UINT SyncInter
         FramePacer::Get().OnBeforePresent(pThis, SyncInterval, Flags);
         s_inPresent = false;
     }
+    
+    const auto& config = AetherConfig::Get();
+    if (config.pacing.targetFpsCap == 0) {
+        Flags |= DXGI_PRESENT_ALLOW_TEARING;
+        SyncInterval = 0;
+    }
+
     HRESULT hr = o_Present1 ? o_Present1(pThis, SyncInterval, Flags, pParams) : S_OK;
     FramePacer::Get().OnAfterPresent(pThis, hr);
     return hr;

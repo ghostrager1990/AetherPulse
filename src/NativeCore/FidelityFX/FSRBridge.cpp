@@ -3,7 +3,6 @@
 #include "../Shared/Config.h"
 #include <string>
 
-// Types for dynamic FidelityFX Modular SDK runtime bindings
 typedef int32_t FfxReturnCode;
 typedef void* FfxUpscaleContext;
 
@@ -21,6 +20,9 @@ typedef FfxReturnCode (*PFN_ffxFsrContextDestroy)(
     void* pContext
 );
 
+static uint32_t g_lastTrackedCap = 0;
+static int g_resetSignalFrames = 0;
+
 FSRBridge& FSRBridge::Get()
 {
     static FSRBridge s_instance;
@@ -33,7 +35,6 @@ bool FSRBridge::Initialize(ID3D12Device* pDevice)
     m_pDevice = pDevice;
     m_pDevice->AddRef();
 
-    // Dynamically query official modular FidelityFX Upscaler & Frame Generation DLLs if present
     if (!m_hUpscalerDll)
     {
         m_hUpscalerDll = LoadLibraryW(L"amd_fidelityfx_upscaler_dx12.dll");
@@ -54,33 +55,6 @@ bool FSRBridge::Initialize(ID3D12Device* pDevice)
     return m_initialized;
 }
 
-void FSRBridge::Shutdown()
-{
-    RCASBridge::Get().Shutdown();
-
-    if (m_hUpscalerDll)
-    {
-        FreeLibrary(m_hUpscalerDll);
-        m_hUpscalerDll = nullptr;
-        m_pfnFsrDispatch = nullptr;
-        m_pfnFsrCreate = nullptr;
-        m_pfnFsrDestroy = nullptr;
-    }
-
-    if (m_hFrameGenDll)
-    {
-        FreeLibrary(m_hFrameGenDll);
-        m_hFrameGenDll = nullptr;
-    }
-
-    if (m_pDevice)
-    {
-        m_pDevice->Release();
-        m_pDevice = nullptr;
-    }
-    m_initialized = false;
-}
-
 bool FSRBridge::DispatchUpscale(
     ID3D12GraphicsCommandList* pCmdList,
     ID3D12Resource* pInputColor,
@@ -95,11 +69,6 @@ bool FSRBridge::DispatchUpscale(
     float jitterY,
     float sharpness)
 {
-    (void)pDepth;
-    (void)pMotionVectors;
-    (void)jitterX;
-    (void)jitterY;
-
     if (!pCmdList || !pInputColor || !pOutputColor)
     {
         return false;
@@ -117,7 +86,19 @@ bool FSRBridge::DispatchUpscale(
 
     const auto& config = AetherConfig::Get();
 
-    // If Native AA is enabled, lock render dimensions to 100% native display size
+    if (config.pacing.targetFpsCap != g_lastTrackedCap)
+    {
+        g_lastTrackedCap = config.pacing.targetFpsCap;
+        g_resetSignalFrames = 15; // Force FSR context pipeline reset for 15 frames on cap change
+    }
+
+    bool shouldResetContext = false;
+    if (g_resetSignalFrames > 0)
+    {
+        shouldResetContext = true;
+        g_resetSignalFrames--;
+    }
+
     if (config.fsr.nativeAA)
     {
         if (displayWidth > 0) renderWidth = displayWidth;
@@ -127,11 +108,10 @@ bool FSRBridge::DispatchUpscale(
     uint32_t targetWidth = displayWidth > 0 ? displayWidth : renderWidth;
     uint32_t targetHeight = displayHeight > 0 ? displayHeight : renderHeight;
 
-    // If official modular upscaler DLL is available and bound, forward call parameters
+    // Execute official FidelityFX dispatch if bound
     if (m_pfnFsrDispatch)
     {
         auto fnDispatch = reinterpret_cast<PFN_ffxFsrContextDispatch>(m_pfnFsrDispatch);
-        // Dispatch to modular SDK pipeline if context exists (binding color, depth, motion vectors, reactive mask)
         struct FfxFsrDispatchDescription
         {
             ID3D12GraphicsCommandList* commandList;
@@ -173,11 +153,12 @@ bool FSRBridge::DispatchUpscale(
         dispatchDesc.renderSizeY = renderHeight;
         dispatchDesc.enableSharpening = config.fsr.enableRCASOverride;
         dispatchDesc.sharpness = sharpness;
+        dispatchDesc.reset = shouldResetContext;
 
-        (void)fnDispatch;
+        // Actually invoke the FidelityFX dispatch pipeline
+        fnDispatch(nullptr, &dispatchDesc);
     }
 
-    // Execute RCAS sharpening pass on the upscaled buffer
     return RCASBridge::Get().DispatchRCAS(
         pCmdList,
         pInputColor,
@@ -186,4 +167,30 @@ bool FSRBridge::DispatchUpscale(
         targetHeight,
         sharpness
     );
+}
+
+void FSRBridge::Shutdown()
+{
+    if (m_pDevice)
+    {
+        m_pDevice->Release();
+        m_pDevice = nullptr;
+    }
+
+    if (m_hUpscalerDll)
+    {
+        FreeLibrary(m_hUpscalerDll);
+        m_hUpscalerDll = nullptr;
+    }
+
+    if (m_hFrameGenDll)
+    {
+        FreeLibrary(m_hFrameGenDll);
+        m_hFrameGenDll = nullptr;
+    }
+
+    m_pfnFsrDispatch = nullptr;
+    m_pfnFsrCreate = nullptr;
+    m_pfnFsrDestroy = nullptr;
+    m_initialized = false;
 }

@@ -1,4 +1,4 @@
-#include "AntiLag2Bridge.h"
+﻿#include "AntiLag2Bridge.h"
 #include <cstring>
 
 AntiLag2Bridge::AntiLag2Bridge()
@@ -45,9 +45,16 @@ void AntiLag2Bridge::TagSwapChain(IDXGISwapChain* pSwapChain, bool enabled, uint
 {
     if (!pSwapChain) return;
 
+    if (!enabled || targetFps == 0)
+    {
+        // Explicitly clear private GUID from swapchain so AMD driver unlocks queue pacing instantly
+        pSwapChain->SetPrivateData(IID_IFfxAntiLag2Data, 0, nullptr);
+        return;
+    }
+
     AntiLag2SwapchainTag tag = {};
     tag.version = 1;
-    tag.flags = enabled ? 0x1 : 0x0;
+    tag.flags = 0x1;
     tag.targetFps = targetFps;
     tag.reserved = 0;
 
@@ -65,6 +72,5 @@ void AntiLag2Bridge::MarkEndOfFrameRendering()
 {
     if (!m_enabled.load(std::memory_order_relaxed)) return;
 
-    // Record timestamp for pacing and frame completion tracking
     QueryPerformanceCounter(&m_lastFrameQpc);
 }
