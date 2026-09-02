@@ -1,0 +1,212 @@
+﻿<UserControl x:Class="AppUI.Views.ArchitectureInfoView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" 
+             d:DesignHeight="1200" d:DesignWidth="900">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="28,20,28,28">
+
+            <!-- Header Row -->
+            <StackPanel Margin="0,0,0,18">
+                <TextBlock Text="Files &amp; Architecture Guide" FontSize="20" FontWeight="Bold" Foreground="#FFFFFF" />
+                <TextBlock Text="Technical overview of injected proxy binaries, runtime cadencing hooks, and display sync tiers."
+                           FontSize="13" Foreground="#8B949E" Margin="0,4,0,0" LineHeight="18" />
+            </StackPanel>
+
+            <!-- Card 1: Modular Runtime Architecture -->
+            <Border Background="#161A22" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Swapchain Cadence &amp; Pacing Architecture" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,10" />
+                    <TextBlock Text="AetherPulse intercepts DXGI swapchain present calls directly to align rendered and interpolated frames to high-precision hardware waitable timers, eliminating micro-stutter and frame pacing judder."
+                               FontSize="12" Foreground="#8B949E" TextWrapping="Wrap" LineHeight="17" />
+                </StackPanel>
+            </Border>
+
+            <!-- Card 2: Active SDK & Runtime Versioning Manifest -->
+            <Border Background="#161A22" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Active SDK &amp; Runtime Versioning Manifest" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,14" />
+
+                    <!-- Item 1: DXGI Waitable Swapchain Hook -->
+                    <Border Background="#0D1117" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="DXGI Waitable Swapchain Hook" FontWeight="SemiBold" Foreground="#FFFFFF" FontSize="13" />
+                                    <Border Background="#3D1418" CornerRadius="3" Padding="4,1" Margin="8,0,0,0">
+                                        <TextBlock Text="x64" FontSize="10" FontWeight="Bold" Foreground="#FF6E6E" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Direct hardware flip presentation with microsecond waitable object synchronization" FontSize="11.5" Foreground="#8B949E" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <TextBlock Text="IDXGISwapChain4 / DX12" FontSize="12" FontWeight="SemiBold" Foreground="#FF6E6E" HorizontalAlignment="Right" />
+                                <Border Background="#1C2F24" BorderBrush="#238636" BorderThickness="1" CornerRadius="3" Padding="6,1" Margin="0,4,0,0">
+                                    <TextBlock Text="Hook Active" FontSize="9.5" FontWeight="Bold" Foreground="#3FB950" />
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Item 2: HLSL Compute Bytecode Target -->
+                    <Border Background="#0D1117" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="HLSL Compute Bytecode Target" FontWeight="SemiBold" Foreground="#FFFFFF" FontSize="13" />
+                                    <Border Background="#3D1418" CornerRadius="3" Padding="4,1" Margin="8,0,0,0">
+                                        <TextBlock Text="x64" FontSize="10" FontWeight="Bold" Foreground="#FF6E6E" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Wave Matrix Multiply Accumulate (WMMA) &amp; Wave Intrinsics (cs_6_6)" FontSize="11.5" Foreground="#8B949E" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <TextBlock Text="Shader Model 6.6 (DirectX 12 Agility SDK)" FontSize="12" FontWeight="SemiBold" Foreground="#58A6FF" HorizontalAlignment="Right" />
+                                <Border Background="#121D2F" BorderBrush="#1F6FEB" BorderThickness="1" CornerRadius="3" Padding="6,1" Margin="0,4,0,0">
+                                    <TextBlock Text="Pre-compiled (.cso)" FontSize="9.5" FontWeight="Bold" Foreground="#58A6FF" />
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Item 3: RTSS Auto-Passthrough Bridge -->
+                    <Border Background="#0D1117" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="14">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                    <TextBlock Text="RTSS Auto-Passthrough Bridge" FontWeight="SemiBold" Foreground="#FFFFFF" FontSize="13" />
+                                    <Border Background="#3D1418" CornerRadius="3" Padding="4,1" Margin="8,0,0,0">
+                                        <TextBlock Text="x64" FontSize="10" FontWeight="Bold" Foreground="#FF6E6E" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Shared memory telemetry channel detecting external RTSS frame limiters for cadence matching" FontSize="11.5" Foreground="#8B949E" Margin="0,3,0,0" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <TextBlock Text="RivaTuner Shared Memory IPC" FontSize="12" FontWeight="SemiBold" Foreground="#58A6FF" HorizontalAlignment="Right" />
+                                <Border Background="#1C2F24" BorderBrush="#238636" BorderThickness="1" CornerRadius="3" Padding="6,1" Margin="0,4,0,0">
+                                    <TextBlock Text="Auto-Detect Ready" FontSize="9.5" FontWeight="Bold" Foreground="#3FB950" />
+                                </Border>
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 3: Injected Proxy Files & Runtime Components -->
+            <Border Background="#161A22" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="18" Margin="0,0,0,16">
+                <StackPanel>
+                    <TextBlock Text="Injected Proxy Files &amp; Runtime Components" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,14" />
+
+                    <!-- File 1: dxgi.dll -->
+                    <Border Background="#0D1117" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,10">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="dxgi.dll" FontWeight="Bold" Foreground="#FF6E6E" FontSize="13" />
+                                <Border Background="#1C2F24" BorderBrush="#238636" BorderThickness="1" CornerRadius="3" Padding="6,1" Margin="8,0,0,0">
+                                    <TextBlock Text="Primary Presentation Proxy" FontSize="9.5" FontWeight="Bold" Foreground="#3FB950" />
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="Direct presentation interposer with automatic ReShade chainloading, swapchain hook latching, and System32 export forwarding." FontSize="11.5" Foreground="#8B949E" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- File 2: aetherpulse.ini -->
+                    <Border Background="#0D1117" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,10">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="aetherpulse.ini" FontWeight="Bold" Foreground="#FF6E6E" FontSize="13" />
+                                <Border Background="#161B22" BorderBrush="#30363D" BorderThickness="1" CornerRadius="3" Padding="6,1" Margin="8,0,0,0">
+                                    <TextBlock Text="Runtime Config" FontSize="9.5" FontWeight="Bold" Foreground="#8B949E" />
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="Per-game runtime configuration placed in the game executable root. Stores target frame rate caps, sub-frame cadence ratios, waitable swapchain latency flags, and RTSS auto-passthrough thresholds." FontSize="11.5" Foreground="#8B949E" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- File 3: aetherpulse_status.json -->
+                    <Border Background="#0D1117" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="14">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                                <TextBlock Text="aetherpulse_status.json" FontWeight="Bold" Foreground="#FF6E6E" FontSize="13" />
+                                <Border Background="#1C2F24" BorderBrush="#238636" BorderThickness="1" CornerRadius="3" Padding="6,1" Margin="8,0,0,0">
+                                    <TextBlock Text="Zero-Overhead IPC" FontSize="9.5" FontWeight="Bold" Foreground="#3FB950" />
+                                </Border>
+                            </StackPanel>
+                            <TextBlock Text="Low-latency memory-mapped status stream transmitting real-time frametime, 1% low FPS, and pacing jitter telemetry to the WPF UI." FontSize="11.5" Foreground="#8B949E" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 4: Display Synchronization & Cadence Tiers -->
+            <Border Background="#161A22" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="18">
+                <StackPanel>
+                    <TextBlock Text="Display Synchronization &amp; Frame Cadence Tiers" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,14" />
+
+                    <!-- Tier 1: VRR / FreeSync / G-Sync Tier -->
+                    <Border Background="#0D1117" BorderBrush="#238636" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,10">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Variable Refresh Rate (FreeSync / G-Sync Compatible)" FontWeight="SemiBold" Foreground="#FFFFFF" FontSize="13.5" />
+                                <TextBlock Text="Optimal Tier" FontSize="11" FontWeight="Bold" Foreground="#3FB950" Grid.Column="1" />
+                            </Grid>
+                            <TextBlock Text="Dynamic Sub-Frame Pacing + Waitable Object Swapchain" FontSize="12" FontWeight="SemiBold" Foreground="#3FB950" Margin="0,0,0,3" />
+                            <TextBlock Text="Synchronizes generated frames directly inside the VRR window using microsecond waitable timers. Frame intervals adjust dynamically to eliminate presentation judder and teardown artifacts." FontSize="11.5" Foreground="#8B949E" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Tier 2: High Refresh Fixed Tier -->
+                    <Border Background="#0D1117" BorderBrush="#1F6FEB" BorderThickness="1" CornerRadius="6" Padding="14" Margin="0,0,0,10">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="High Refresh Fixed Displays (120Hz / 144Hz / 165Hz+)" FontWeight="SemiBold" Foreground="#FFFFFF" FontSize="13.5" />
+                                <TextBlock Text="Cadence Locked Tier" FontSize="11" FontWeight="Bold" Foreground="#58A6FF" Grid.Column="1" />
+                            </Grid>
+                            <TextBlock Text="Exact Integer Fractional Latching (1/2 or 1/3 V-Sync Intervals)" FontSize="12" FontWeight="SemiBold" Foreground="#58A6FF" Margin="0,0,0,3" />
+                            <TextBlock Text="Locks interpolated sub-frames to precise refresh boundaries. Mitigates pacing drift when frame delivery sits slightly below peak scanout frequency." FontSize="11.5" Foreground="#8B949E" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Tier 3: Standard 60Hz Fixed Tier -->
+                    <Border Background="#0D1117" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="14">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,4">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="Standard Fixed Displays (60Hz Legacy)" FontWeight="SemiBold" Foreground="#FFFFFF" FontSize="13.5" />
+                                <TextBlock Text="Strict Interval Tier" FontSize="11" FontWeight="Bold" Foreground="#8B949E" Grid.Column="1" />
+                            </Grid>
+                            <TextBlock Text="Hardware Flip Discard + Fixed 16.66ms Cadence Guard" FontSize="12" FontWeight="SemiBold" Foreground="#D29922" Margin="0,0,0,3" />
+                            <TextBlock Text="Bypasses Windows Desktop Window Manager (DWM) composition buffers to enforce precise frame presentation without back-pressure queue bloat." FontSize="11.5" Foreground="#8B949E" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

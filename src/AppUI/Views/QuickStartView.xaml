@@ -1,0 +1,130 @@
+﻿<UserControl x:Class="AppUI.Views.QuickStartView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:vm="clr-namespace:AppUI.ViewModels"
+             FontFamily="Bahnschrift"
+             mc:Ignorable="d" 
+             d:DesignHeight="850" d:DesignWidth="850">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="28,20,28,28">
+
+            <!-- Header -->
+            <StackPanel Margin="0,0,0,20">
+                <TextBlock Text="Quick Start Onboarding Guide" FontSize="20" FontWeight="Bold" Foreground="#FFFFFF" />
+                <TextBlock Text="Get up and running with sub-millisecond DirectX 12 frame pacing and precision hardware cadence synchronization in 3 simple steps." 
+                           FontSize="13" Foreground="#8B949E" Margin="0,4,0,0" LineHeight="18" />
+            </StackPanel>
+
+            <!-- Card 1: 3-Step Setup Workflow -->
+            <Border Background="#161A22" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="20" Margin="0,0,0,20">
+                <StackPanel>
+                    <TextBlock Text="Seamless 3-Step Setup Workflow" FontSize="15" FontWeight="Bold" Foreground="#FFFFFF" Margin="0,0,0,16" />
+
+                    <!-- Step 1 -->
+                    <Border Background="#0D1117" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="16" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Width="36" Height="36" Background="#162235" BorderBrush="#1F6FEB" BorderThickness="1" CornerRadius="18" Margin="0,0,16,0">
+                                <TextBlock Text="1" FontWeight="Bold" FontSize="14" Foreground="#58A6FF" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Step 1: Add &amp; Deploy Proxy Hooks" FontWeight="Bold" FontSize="14" Foreground="#FFFFFF" />
+                                    <Border Background="#1C2F24" BorderBrush="#238636" BorderThickness="1" CornerRadius="3" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="One-Click Install" FontSize="9.5" FontWeight="Bold" Foreground="#3FB950" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Open the Game Library tab, locate your detected game, and click 'Deploy'. AetherPulse deploys the standalone dxgi.dll presentation hook and configuration file directly into the game binaries directory." 
+                                           FontSize="12" Foreground="#8B949E" Margin="0,4,0,0" LineHeight="17" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Step 2 -->
+                    <Border Background="#0D1117" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="16" Margin="0,0,0,12">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Width="36" Height="36" Background="#261C3B" BorderBrush="#8957E5" BorderThickness="1" CornerRadius="18" Margin="0,0,16,0">
+                                <TextBlock Text="2" FontWeight="Bold" FontSize="14" Foreground="#D2A8FF" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Step 2: Launch Game &amp; Engage Cadence Pacing" FontWeight="Bold" FontSize="14" Foreground="#FFFFFF" />
+                                    <Border Background="#261C3B" BorderBrush="#8957E5" BorderThickness="1" CornerRadius="3" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="Standalone Hook" FontSize="9.5" FontWeight="Bold" Foreground="#D2A8FF" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Launch the target game. AetherPulse automatically intercepts DXGI swapchain present passes via the standalone dxgi.dll proxy, engaging high-resolution waitable timers and 50:50 cadence alignment instantly." 
+                                           FontSize="12" Foreground="#8B949E" Margin="0,4,0,0" LineHeight="17" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- Step 3 -->
+                    <Border Background="#0D1117" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="16">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border Grid.Column="0" Width="36" Height="36" Background="#2A1800" BorderBrush="#9E6A03" BorderThickness="1" CornerRadius="18" Margin="0,0,16,0">
+                                <TextBlock Text="3" FontWeight="Bold" FontSize="14" Foreground="#E3B341" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Step 3: Tune Live Without Restarting" FontWeight="Bold" FontSize="14" Foreground="#FFFFFF" />
+                                    <Border Background="#2A1800" BorderBrush="#9E6A03" BorderThickness="1" CornerRadius="3" Padding="6,1" Margin="8,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="Zero Restarts" FontSize="9.5" FontWeight="Bold" Foreground="#E3B341" />
+                                    </Border>
+                                </StackPanel>
+                                <TextBlock Text="Keep AetherPulse open in the background while playing. Adjust cadence multiplier modes, precision frame rate caps, or sync intervals-all changes serialize live to aetherpulse.ini and take effect instantaneously." 
+                                           FontSize="12" Foreground="#8B949E" Margin="0,4,0,0" LineHeight="17" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <!-- Card 3: Ready Call to Action -->
+            <Border Background="#161A22" BorderBrush="#30363D" BorderThickness="1" CornerRadius="6" Padding="18,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock Text="Ready to configure your first game?" FontSize="14" FontWeight="Bold" Foreground="#FFFFFF" />
+                        <TextBlock Text="Head over to the Game Library to select your executable and deploy runtime hooks." FontSize="12" Foreground="#8B949E" Margin="0,2,0,0" />
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Content="Go to Game Library →" 
+                            Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            CommandParameter="{x:Static vm:NavigationPage.Library}"
+                            Background="#DA3633" Foreground="#FFFFFF" BorderBrush="#F85149" BorderThickness="1"
+                            Height="34" Padding="18,0" FontSize="12.5" FontWeight="Bold" Cursor="Hand" VerticalAlignment="Center" />
+                </Grid>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
+
+
+
+

@@ -1,0 +1,14 @@
+LIBRARY dxgi.dll
+EXPORTS
+    CompatString
+    CompatValue
+    CreateDXGIFactory = Hooked_CreateDXGIFactory
+    CreateDXGIFactory1 = Hooked_CreateDXGIFactory1
+    CreateDXGIFactory2 = Hooked_CreateDXGIFactory2
+    DXGICreateGlobalKeyedMutex
+    DXGIOpenGlobalKeyedMutex
+    PIXBeginCapture
+    PIXEndCapture
+    PIXGetCaptureState
+    SetAppCompatStringPointer
+    UpdateOverlaySupport

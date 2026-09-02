@@ -1,0 +1,43 @@
+﻿# .NET Build Outputs & Caches
+**/bin/
+**/obj/
+**/build/
+*.user
+*.userosscache
+*.suo
+*.userprefs
+*.dbmdl
+
+# IDE & Visual Studio Workspaces
+.vs/
+.vsidx/
+.vscode/
+.idea/
+*.DotSettings.user
+
+# Native C++ Artifacts & Intermediates
+**/x64/
+**/x86/
+**/ARM64/
+**/Debug/
+**/Release/
+*.pch
+*.pdb
+*.ilk
+*.idb
+*.exp
+*.lib
+
+# Redistributables & Large Binary Payloads
+**/Redist/*.dll
+**/Assets/Payload/*.dll
+*.iso
+*.zip
+*.7z
+*.tar.gz
+
+# Crash Dumps & Logs
+*.log
+*.dmp
+*.crash
+build_log.txt
