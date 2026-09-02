@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="AppUI.Views.GameLibraryView"
+<UserControl x:Class="AppUI.Views.GameLibraryView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -148,6 +148,16 @@
 
                                         <!-- Action Buttons Bar -->
                                         <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                                            <ComboBox ItemsSource="{Binding AvailableProxyNames}"
+                                                      SelectedItem="{Binding SelectedProxyName}"
+                                                      IsEnabled="{Binding IsProxySelectionEnabled}"
+                                                      Height="34"
+                                                      Width="110"
+                                                      FontSize="12.5"
+                                                      FontWeight="SemiBold"
+                                                      VerticalContentAlignment="Center"
+                                                      Margin="0,0,8,0"
+                                                      ToolTip="Select injection target (use version.dll if ReShade or OptiScaler uses dxgi.dll)" />
                                             <Button Content="⚙ Tune" Style="{StaticResource BtnSecondary}" Height="34" Padding="14,0" FontSize="13" FontWeight="SemiBold" Margin="0,0,6,0"
                                                     Command="{Binding DataContext.TuneGameCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}" />
@@ -156,7 +166,7 @@
                                                     Command="{Binding DataContext.DeployCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}" />
 
-                                            <Button Content="Uninstall" Style="{StaticResource BtnSecondary}" Height="34" Padding="12,0" FontSize="13" FontWeight="SemiBold" Margin="0,0,6,0"
+                                            <Button Content="Uninstall" Style="{StaticResource BtnSecondary}" Height="34" Padding="12,0" FontSize="13" FontWeight="SemiBold" Margin="0,0,6,0" IsEnabled="{Binding HasBackup}"
                                                     Command="{Binding DataContext.RemoveHookCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                                     CommandParameter="{Binding}" />
 

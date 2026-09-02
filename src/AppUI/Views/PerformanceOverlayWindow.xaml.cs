@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
@@ -27,10 +27,19 @@ namespace AppUI.Views
         private static readonly SolidColorBrush StandbyAmberBg = new(Color.FromRgb(0x2A, 0x18, 0x00));
         private static readonly SolidColorBrush StandbyAmberBorder = new(Color.FromRgb(0x9E, 0x6A, 0x03));
 
+        public string CurrentPosition { get; set; } = "Top Right";
+
         public PerformanceOverlayWindow(ITelemetryService? telemetryService = null)
         {
             InitializeComponent();
             Loaded += OnWindowLoaded;
+            MouseLeftButtonDown += (s, e) =>
+            {
+                if (e.ButtonState == System.Windows.Input.MouseButtonState.Pressed)
+                {
+                    DragMove();
+                }
+            };
 
             if (telemetryService != null)
             {
@@ -56,6 +65,58 @@ namespace AppUI.Views
             var helper = new WindowInteropHelper(this);
             int exStyle = GetWindowLong(helper.Handle, GWL_EXSTYLE);
             SetWindowLong(helper.Handle, GWL_EXSTYLE, exStyle | WS_EX_TOOLWINDOW);
+            SnapToCorner(CurrentPosition);
+        }
+
+        public void SetHudVisibility(bool isVisible)
+        {
+            Dispatcher.BeginInvoke(() =>
+            {
+                if (isVisible)
+                {
+                    Show();
+                    Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    Visibility = Visibility.Collapsed;
+                }
+            });
+        }
+
+        public void SnapToCorner(string position)
+        {
+            if (string.IsNullOrWhiteSpace(position)) return;
+            CurrentPosition = position;
+
+            Dispatcher.BeginInvoke(() =>
+            {
+                var workArea = SystemParameters.WorkArea;
+                const double margin = 24.0;
+                double width = ActualWidth > 0 ? ActualWidth : (Width > 0 ? Width : 340);
+                double height = ActualHeight > 0 ? ActualHeight : (Height > 0 ? Height : 115);
+
+                switch (position.Trim().ToLowerInvariant())
+                {
+                    case "top left":
+                        Left = workArea.Left + margin;
+                        Top = workArea.Top + margin;
+                        break;
+                    case "bottom left":
+                        Left = workArea.Left + margin;
+                        Top = workArea.Top + workArea.Height - height - margin;
+                        break;
+                    case "bottom right":
+                        Left = workArea.Left + workArea.Width - width - margin;
+                        Top = workArea.Top + workArea.Height - height - margin;
+                        break;
+                    case "top right":
+                    default:
+                        Left = workArea.Left + workArea.Width - width - margin;
+                        Top = workArea.Top + margin;
+                        break;
+                }
+            });
         }
 
         public void UpdateMetrics(double fps, double frameTimeMs, double lowFps, double jitterPercent, bool isHooked, double cadenceRatio = 0.50, double subFrameVarianceUs = 0.0, double realTimeDeltaMs = 0.0)

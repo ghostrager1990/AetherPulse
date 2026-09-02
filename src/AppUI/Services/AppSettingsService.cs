@@ -15,6 +15,8 @@ namespace AppUI.Services
         public bool StartMinimized { get; set; } = false;
         public bool EnableProxyChaining { get; set; } = true;
         public bool EnableHardwareSensorPolling { get; set; } = true;
+        public bool ShowFloatingHud { get; set; } = true;
+        public string HudPosition { get; set; } = "Top Right";
     }
 
     public interface IAppSettingsService

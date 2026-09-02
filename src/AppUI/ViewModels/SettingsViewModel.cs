@@ -50,11 +50,18 @@ namespace AppUI.ViewModels
         public SettingsViewModel(object? p1, object? p2) : this(p1 as IAppSettingsService) { }
         public SettingsViewModel(object? p1, object? p2, object? p3) : this(p1 as IAppSettingsService) { }
 
+        public bool IsTopLeftActive => string.Equals(HudPosition, "Top Left", System.StringComparison.OrdinalIgnoreCase);
+        public bool IsTopRightActive => string.Equals(HudPosition, "Top Right", System.StringComparison.OrdinalIgnoreCase);
+        public bool IsBottomLeftActive => string.Equals(HudPosition, "Bottom Left", System.StringComparison.OrdinalIgnoreCase);
+        public bool IsBottomRightActive => string.Equals(HudPosition, "Bottom Right", System.StringComparison.OrdinalIgnoreCase);
+
         private void LoadFromSettings()
         {
             if (_settingsService?.CurrentSettings != null)
             {
                 var s = _settingsService.CurrentSettings;
+                ShowFloatingHud = s.ShowFloatingHud;
+                HudPosition = string.IsNullOrWhiteSpace(s.HudPosition) ? "Top Right" : s.HudPosition;
                 StartWithWindows = s.StartWithWindows;
                 MinimizeToTray = s.MinimizeToTray;
                 CloseToTray = s.CloseToTray;
@@ -66,7 +73,18 @@ namespace AppUI.ViewModels
             }
         }
 
-        public void LoadValues(object? profile = null) { }
+        public void LoadValues(object? profile = null)
+        {
+            LoadFromSettings();
+        }
+
+        partial void OnHudPositionChanged(string value)
+        {
+            OnPropertyChanged(nameof(IsTopLeftActive));
+            OnPropertyChanged(nameof(IsTopRightActive));
+            OnPropertyChanged(nameof(IsBottomLeftActive));
+            OnPropertyChanged(nameof(IsBottomRightActive));
+        }
 
         partial void OnEnableHardwareSensorPollingChanged(bool value)
         {
@@ -80,6 +98,12 @@ namespace AppUI.ViewModels
 
         partial void OnShowFloatingHudChanged(bool value)
         {
+            if (_settingsService?.CurrentSettings != null && _settingsService.CurrentSettings.ShowFloatingHud != value)
+            {
+                _settingsService.CurrentSettings.ShowFloatingHud = value;
+                _settingsService.Save();
+            }
+
             if (Application.Current.MainWindow is Views.MainWindow mainWin)
             {
                 mainWin.TogglePerformanceOverlay(value);
@@ -90,6 +114,12 @@ namespace AppUI.ViewModels
         public void SetHudPosition(string position)
         {
             HudPosition = position;
+            if (_settingsService?.CurrentSettings != null)
+            {
+                _settingsService.CurrentSettings.HudPosition = position;
+                _settingsService.Save();
+            }
+
             if (Application.Current.MainWindow is Views.MainWindow mainWin)
             {
                 mainWin.SnapHudPosition(position);

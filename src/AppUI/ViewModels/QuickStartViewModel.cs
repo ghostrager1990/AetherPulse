@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 
 namespace AppUI.ViewModels
@@ -24,12 +24,6 @@ namespace AppUI.ViewModels
         private void NavigateToPacing()
         {
             _mainViewModel?.NavigateCommand.Execute(NavigationPage.PacingTuning);
-        }
-
-        [RelayCommand]
-        private void NavigateToRayRegen()
-        {
-            _mainViewModel?.NavigateCommand.Execute(NavigationPage.RayRegenTuning);
         }
     }
 }

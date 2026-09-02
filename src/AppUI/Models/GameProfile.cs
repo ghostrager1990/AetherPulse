@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using System.Text.Json.Serialization;
@@ -399,6 +399,47 @@ namespace AppUI.Models
                 return string.Equals(Id, other.Id, StringComparison.OrdinalIgnoreCase);
             return string.Equals(GameName, other.GameName, StringComparison.OrdinalIgnoreCase);
         }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool HasBackup
+        {
+            get
+            {
+                if (string.IsNullOrWhiteSpace(ExecutablePath)) return false;
+                string gameDir = AppUI.Services.GameBackupService.ResolveGameDirectory(ExecutablePath);
+                return AppUI.Services.GameBackupService.HasExistingBackup(gameDir);
+            }
+        }
+
+        public void RefreshBackupStatus()
+        {
+            OnPropertyChanged(nameof(HasBackup));
+            OnPropertyChanged(nameof(IsProxySelectionEnabled));
+        }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public static string[] AvailableProxyNames { get; } = new[]
+        {
+            "dxgi.dll",
+            "version.dll",
+            "d3d12.dll"
+        };
+
+        private string _selectedProxyName = "dxgi.dll";
+        public string SelectedProxyName
+        {
+            get => string.IsNullOrWhiteSpace(_selectedProxyName) ? "dxgi.dll" : _selectedProxyName;
+            set
+            {
+                if (SetProperty(ref _selectedProxyName, value))
+                {
+                    OnPropertyChanged(nameof(ProxyDisplayLabel));
+                }
+            }
+        }
+
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool IsProxySelectionEnabled => !HasBackup;
 
         public override bool Equals(object? obj)
         {

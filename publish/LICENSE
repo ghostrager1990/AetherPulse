@@ -1,0 +1,29 @@
+Proprietary Software License Agreement
+AetherPulse
+Copyright © 2026 Stanorius Software. All rights reserved.
+
+IMPORTANT — READ CAREFULLY:
+This Software License Agreement ("Agreement") is a legal agreement between you ("Licensee") and Stanorius Software ("Licensor") for the software product AetherPulse, including its executable binaries, configuration templates, backup manifests, dynamic link libraries (including without limitation dxgi.dll, version.dll, d3d12.dll, and related interposers), shader bytecode, documentation, and user interface ("Software").
+
+1. GRANT OF LICENSE
+Subject to the terms of this Agreement, Licensor grants Licensee a personal, non-exclusive, non-transferable, revocable license to install and run the Software solely for personal, non-commercial evaluation, frame pacing optimization, and DirectX presentation hook calibration in single-player, offline environments.
+
+2. RESTRICTIONS
+Licensee shall NOT:
+(a) Modify, reverse engineer, decompile, disassemble, or derive source code from any pre-compiled binaries or shaders, except to the extent permitted by applicable law;
+(b) Distribute, sublicense, lease, rent, loan, or commercialize the Software, in whole or in part, without express prior written consent from Stanorius Software;
+(c) Utilize the Software, including any DLL interposing, proxy redirection, memory hooks, or API interception techniques, in connection with any multiplayer, competitive, online, or anti-cheat-protected video game;
+(d) Bypass, alter, or manipulate the automated backup manifest system (AetherDLLBackup) in any manner designed to deploy unauthorized payloads or conceal third-party binary alterations;
+(e) Remove, obscure, or alter any copyright notices, trademarks, or proprietary markings on or within the Software.
+
+3. DISCLAIMER OF WARRANTIES & THIRD-PARTY COMPATIBILITY
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT. LICENSOR DOES NOT GUARANTEE COMPATIBILITY OR COEXISTENCE WITH THIRD-PARTY INJECTION TOOLS, RESHADE MODULES, OR DISPLAY UTILITIES. IN NO EVENT SHALL STANORIUS SOFTWARE BE LIABLE FOR ANY CLAIM, DAMAGES, CORRUPTED BINARIES, GAME ACCOUNT SUSPENSIONS OR BANS, HARDWARE CRASHES, SYSTEM INSTABILITY, OR OTHER LIABILITY ARISING FROM OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+4. ATOMIC RESTORATION & UNINSTALLATION
+Licensee acknowledges that deployment creates localized backup archives to facilitate rollback. Licensor assumes no liability for uninstallation failures or file loss resulting from external modification or manual deletion of the backup manifest directory.
+
+5. TERMINATION
+This Agreement is effective until terminated. Your rights under this license will terminate automatically without notice from Licensor if you fail to comply with any of its terms. Upon termination, you must execute a complete uninstallation and destroy all copies of the Software in your possession.
+
+6. GOVERNING LAW
+This Agreement shall be governed by and construed in accordance with the laws of the jurisdiction of the author, without regard to its conflict of law principles.

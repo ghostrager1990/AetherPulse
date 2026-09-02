@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
@@ -15,8 +15,6 @@ namespace AppUI.ViewModels
         QuickStart,
         Library,
         PacingTuning,
-        FsrTuning,
-        RayRegenTuning,
         ArchitectureInfo,
         Settings,
         Help
@@ -61,8 +59,6 @@ namespace AppUI.ViewModels
         public QuickStartViewModel QuickStartVM { get; }
         public GameLibraryViewModel LibraryVM { get; }
         public PacingTuningViewModel PacingVM { get; }
-// // public FSRTuningViewModel FsrVM { get; }
-// // public RayRegenTuningViewModel RayRegenVM { get; }
         public ArchitectureInfoViewModel ArchitectureVM { get; }
         public SettingsViewModel SettingsVM { get; }
         public HelpViewModel HelpVM { get; }
@@ -92,8 +88,6 @@ namespace AppUI.ViewModels
             QuickStartVM = new QuickStartViewModel(this);
             LibraryVM = new GameLibraryViewModel(_deploymentService, _profileStorage, _telemetryService);
             PacingVM = new PacingTuningViewModel();
-//             FsrVM = new FSRTuningViewModel();
-//             RayRegenVM = new RayRegenTuningViewModel();
             ArchitectureVM = new ArchitectureInfoViewModel();
             SettingsVM = new SettingsViewModel(_appSettings);
             HelpVM = new HelpViewModel();
@@ -102,8 +96,7 @@ namespace AppUI.ViewModels
             _currentViewModel = DashboardVM;
 
             // Wire available tuning profiles
-                        RebuildAvailableTuningProfiles();
-//             FsrVM.SetAvailableProfiles(AvailableTuningProfiles);
+            RebuildAvailableTuningProfiles();
             LibraryVM.GameProfiles.CollectionChanged += (s, e) =>
             {
                 OnGameProfilesCollectionChanged(s, e);
@@ -130,8 +123,6 @@ namespace AppUI.ViewModels
 
             // Initialize tuning sub-viewmodels with active profile
             PacingVM.SetProfile(_activeTuningProfile);
-//             FsrVM.SetProfile(_activeTuningProfile);
-//             RayRegenVM.SetProfile(_activeTuningProfile);
 
             // Wire telemetry connection status events
             _telemetryService.ConnectionStatusChanged += OnTelemetryConnectionChanged;
@@ -149,15 +140,12 @@ namespace AppUI.ViewModels
             await _appSettings.LoadSettingsAsync();
             SettingsVM.LoadValues();
             await LibraryVM.LoadProfilesAsync();
-                        RebuildAvailableTuningProfiles();
-//             FsrVM.SetAvailableProfiles(AvailableTuningProfiles);
+            RebuildAvailableTuningProfiles();
         }
 
         partial void OnActiveTuningProfileChanged(GameProfile value)
         {
             PacingVM.SetProfile(value);
-//             FsrVM.SetProfile(value);
-//             RayRegenVM.SetProfile(value);
         }
 
         private void OnSessionActiveProfileChanged(GameProfile profile)
@@ -184,8 +172,7 @@ namespace AppUI.ViewModels
 
         private void OnGameProfilesCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
         {
-                        RebuildAvailableTuningProfiles();
-//             FsrVM.SetAvailableProfiles(AvailableTuningProfiles);
+            RebuildAvailableTuningProfiles();
         }
 
         private void RebuildAvailableTuningProfiles()
@@ -205,8 +192,6 @@ namespace AppUI.ViewModels
                 : null;
 
             ActiveTuningProfile = matchingProfile ?? GlobalDefaultProfile;
-
-//             FsrVM.SetAvailableProfiles(AvailableTuningProfiles);
         }
 
         private readonly System.Windows.Threading.DispatcherTimer _attachmentTimer;
@@ -294,8 +279,6 @@ namespace AppUI.ViewModels
                 NavigationPage.QuickStart => QuickStartVM,
                 NavigationPage.Library => LibraryVM,
                 NavigationPage.PacingTuning => PacingVM,
-//                 NavigationPage.FsrTuning => FsrVM,
-//                 NavigationPage.RayRegenTuning => RayRegenVM,
                 NavigationPage.ArchitectureInfo => ArchitectureVM,
                 NavigationPage.Settings => SettingsVM,
                 NavigationPage.Help => HelpVM,

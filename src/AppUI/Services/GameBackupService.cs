@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
@@ -12,120 +12,136 @@ namespace AppUI.Services
         public const string BackupDirName = "AetherDLLBackup";
         public const string ManifestName = "aether_manifest.json";
 
-        public static void CleanGameDirectory(string targetPath)
+        public static string ResolveGameDirectory(string targetPath)
         {
-            string gameDir = File.Exists(targetPath) && targetPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
-                ? Path.GetDirectoryName(targetPath)!
-                : targetPath;
+            if (string.IsNullOrWhiteSpace(targetPath)) return string.Empty;
 
-            if (string.IsNullOrWhiteSpace(gameDir) || !Directory.Exists(gameDir)) return;
-
-            // 1. Restore any backed up original files
-            UninstallAndRestore(gameDir);
-
-            // 2. Remove all legacy proxy DLLs and configs to guarantee vanilla state
-            string[] proxyFiles = new[]
+            if (File.Exists(targetPath) || targetPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
             {
-                "dxgi.dll",
-                "version.dll",
-                "dxcore.dll",
-                "aetherpulse.ini",
-                "aetherpulse_debug.log"
-            };
+                return Path.GetDirectoryName(targetPath) ?? string.Empty;
+            }
 
-            foreach (var file in proxyFiles)
+            return targetPath;
+        }
+
+        public static bool HasExistingBackup(string gameDir)
+        {
+            string backupPath = Path.Combine(gameDir, BackupDirName);
+            string manifestPath = Path.Combine(backupPath, ManifestName);
+            return Directory.Exists(backupPath) && File.Exists(manifestPath);
+        }
+
+        public static BackupManifest? LoadManifest(string gameDir)
+        {
+            string manifestPath = Path.Combine(gameDir, BackupDirName, ManifestName);
+            if (!File.Exists(manifestPath)) return null;
+
+            try
             {
-                string fullPath = Path.Combine(gameDir, file);
-                try
-                {
-                    if (File.Exists(fullPath)) File.Delete(fullPath);
-                }
-                catch { }
+                string json = File.ReadAllText(manifestPath);
+                return JsonSerializer.Deserialize<BackupManifest>(json);
+            }
+            catch
+            {
+                return null;
             }
         }
 
         public static void DeployAndBackup(string targetPath, Dictionary<string, string> packageFilesToDeploy)
         {
-            string gameDir = File.Exists(targetPath) && targetPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
-                ? Path.GetDirectoryName(targetPath)!
-                : targetPath;
+            string gameDir = ResolveGameDirectory(targetPath);
+            if (string.IsNullOrWhiteSpace(gameDir) || !Directory.Exists(gameDir))
+            {
+                throw new DirectoryNotFoundException($"Target directory does not exist: {gameDir}");
+            }
 
             string backupPath = Path.Combine(gameDir, BackupDirName);
+            string manifestPath = Path.Combine(backupPath, ManifestName);
+
+            if (Directory.Exists(backupPath) && File.Exists(manifestPath))
+            {
+                throw new InvalidOperationException("Active backup manifest already exists. Re-deployment halted to protect original binaries.");
+            }
+
             Directory.CreateDirectory(backupPath);
 
-            var manifest = new BackupManifest();
-
-            foreach (var (fileName, sourcePackagePath) in packageFilesToDeploy)
+            var manifest = new BackupManifest
             {
-                string targetGameFile = Path.Combine(gameDir, fileName);
+                InstalledAt = DateTime.UtcNow
+            };
 
+            foreach (var (targetFileName, sourcePackagePath) in packageFilesToDeploy)
+            {
+                string targetGameFile = Path.Combine(gameDir, targetFileName);
+
+                // If original file exists, back it up atomically with SHA-256 validation
                 if (File.Exists(targetGameFile))
                 {
-                    string destBackup = Path.Combine(backupPath, fileName);
-                    string destBakCopy = Path.Combine(backupPath, $"{fileName}.bak");
-
-                    File.Copy(targetGameFile, destBackup, overwrite: true);
-                    File.Copy(targetGameFile, destBakCopy, overwrite: true);
-
-                    manifest.OriginalFileHashes[fileName] = ComputeSha256(destBackup);
+                    string primaryBackup = Path.Combine(backupPath, targetFileName);
+                    File.Copy(targetGameFile, primaryBackup, overwrite: true);
+                    manifest.OriginalFileHashes[targetFileName] = ComputeSha256(primaryBackup);
                 }
 
                 File.Copy(sourcePackagePath, targetGameFile, overwrite: true);
-                manifest.InjectedFiles.Add(fileName);
+                manifest.InjectedFiles.Add(targetFileName);
             }
 
             string manifestJson = JsonSerializer.Serialize(manifest, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(Path.Combine(backupPath, ManifestName), manifestJson);
+            File.WriteAllText(manifestPath, manifestJson);
         }
 
         public static void UninstallAndRestore(string targetPath)
         {
-            string gameDir = File.Exists(targetPath) && targetPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
-                ? Path.GetDirectoryName(targetPath)!
-                : targetPath;
+            string gameDir = ResolveGameDirectory(targetPath);
+            if (string.IsNullOrWhiteSpace(gameDir) || !Directory.Exists(gameDir)) return;
 
             string backupPath = Path.Combine(gameDir, BackupDirName);
             string manifestPath = Path.Combine(backupPath, ManifestName);
 
             if (!Directory.Exists(backupPath) || !File.Exists(manifestPath))
+            {
+                string[] defaultInjections = { "dxgi.dll", "version.dll", "d3d12.dll", "aetherpulse.ini", "aetherpulse_debug.log" };
+                foreach (var file in defaultInjections)
+                {
+                    string p = Path.Combine(gameDir, file);
+                    try { if (File.Exists(p)) File.Delete(p); } catch { }
+                }
                 return;
+            }
 
-            var manifest = JsonSerializer.Deserialize<BackupManifest>(File.ReadAllText(manifestPath));
+            var manifest = LoadManifest(gameDir);
             if (manifest == null) return;
 
             foreach (var injected in manifest.InjectedFiles)
             {
                 string filePath = Path.Combine(gameDir, injected);
-                if (File.Exists(filePath)) File.Delete(filePath);
+                try { if (File.Exists(filePath)) File.Delete(filePath); } catch { }
             }
-
-            string iniPath = Path.Combine(gameDir, "aetherpulse.ini");
-            if (File.Exists(iniPath)) File.Delete(iniPath);
 
             foreach (var (origFile, expectedHash) in manifest.OriginalFileHashes)
             {
-                string primaryBackup = Path.Combine(backupPath, origFile);
-                string bakBackup = Path.Combine(backupPath, $"{origFile}.bak");
+                string backupFile = Path.Combine(backupPath, origFile);
                 string restoreTarget = Path.Combine(gameDir, origFile);
 
-                if (File.Exists(primaryBackup) && ComputeSha256(primaryBackup) == expectedHash)
+                if (File.Exists(backupFile) && ComputeSha256(backupFile) == expectedHash)
                 {
-                    File.Move(primaryBackup, restoreTarget, overwrite: true);
-                }
-                else if (File.Exists(bakBackup))
-                {
-                    File.Move(bakBackup, restoreTarget, overwrite: true);
+                    File.Move(backupFile, restoreTarget, overwrite: true);
                 }
             }
 
-            Directory.Delete(backupPath, recursive: true);
+            try
+            {
+                Directory.Delete(backupPath, recursive: true);
+            }
+            catch { }
         }
+
+        public static void CleanGameDirectory(string targetPath) => UninstallAndRestore(targetPath);
 
         private static string ComputeSha256(string filePath)
         {
-            using var sha = SHA256.Create();
             using var stream = File.OpenRead(filePath);
-            return Convert.ToHexString(sha.ComputeHash(stream));
+            return Convert.ToHexString(SHA256.HashData(stream));
         }
     }
 }

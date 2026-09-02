@@ -1,4 +1,4 @@
-﻿using System.IO;
+using System.IO;
 using System;
 using System.Windows;
 using AppUI.Services;
@@ -48,7 +48,6 @@ namespace AppUI
             try
             {
                 AppUI.Services.Pacing.PacingIpcService.Instance.Initialize();
-//                 AppUI.Services.Fsr.FsrIpcService.Instance.Initialize();
                 var telemetryService = new TelemetryService();
                 var deploymentService = new DeploymentService();
                 var profileStorage = new ProfileStorageService();
@@ -67,7 +66,7 @@ namespace AppUI
 
                 mainWindow.Show();
                 var overlay = new AppUI.Views.PerformanceOverlayWindow(telemetryService);
-                overlay.Show();
+                mainWindow.SetOverlayWindow(overlay);
                 splashWindow.Close();
             }
             catch (Exception ex)

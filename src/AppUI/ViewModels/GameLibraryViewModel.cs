@@ -1,4 +1,4 @@
-﻿using AppUI.Messages;
+using AppUI.Messages;
 using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Collections.ObjectModel;
@@ -73,10 +73,10 @@ namespace AppUI.ViewModels
         private string _validationTargetName = string.Empty;
 
         [ObservableProperty]
-        private bool _isDx12Passed = true;
+        private bool _IsDx12Passed = true;
 
         [ObservableProperty]
-        private bool _isDlssPassed = true;
+        private bool _IsDlssPassed = true;
 
         private string? _pendingImportPath;
         private GameProfile? _pendingDeployProfile;
@@ -158,9 +158,10 @@ namespace AppUI.ViewModels
             if (target == null || string.IsNullOrWhiteSpace(target.ExecutablePath)) return;
 
             StatusMessage = $"Deploying to {target.Name}...";
-            var result = await _deploymentService.DeployAsync(target.ExecutablePath, target.Mode);
+            var result = await _deploymentService.DeployAsync(target.ExecutablePath, target.Mode, target.SelectedProxyName);
             StatusMessage = result.Message;
             target.IsDeployed = _deploymentService.IsDeployed(target.ExecutablePath, target.Mode);
+            target.RefreshBackupStatus();
             target.WriteToPublicIni();
             await SaveProfilesAsync();
         }
@@ -226,6 +227,7 @@ namespace AppUI.ViewModels
             var result = await _deploymentService.UninstallAsync(target.ExecutablePath, target.Mode);
             StatusMessage = result.Message;
             target.IsDeployed = _deploymentService.IsDeployed(target.ExecutablePath, target.Mode);
+            target.RefreshBackupStatus();
             await SaveProfilesAsync();
         }
 
@@ -257,6 +259,7 @@ namespace AppUI.ViewModels
             var result = await _deploymentService.UninstallAsync(target.ExecutablePath, target.Mode);
             StatusMessage = result.Message;
             target.IsDeployed = _deploymentService.IsDeployed(target.ExecutablePath, target.Mode);
+            target.RefreshBackupStatus();
             await SaveProfilesAsync();
         }
 
@@ -306,16 +309,7 @@ namespace AppUI.ViewModels
             bool hasDlss = File.Exists(Path.Combine(gameDir, "sl.interposer.dll")) ||
                            File.Exists(Path.Combine(gameDir, "nvngx_dlss.dll"));
 
-            if (!hasD3D12 || !hasDlss)
-            {
-                _pendingImportPath = exePath;
-                ValidationTargetName = Path.GetFileNameWithoutExtension(exePath);
-                IsDx12Passed = hasD3D12;
-                IsDlssPassed = hasDlss;
-                ValidationFailureModalVisible = true;
-                return;
-            }
-
+            // Bypassed check: Always add the game directly regardless of missing files
             await AddGameDirectlyAsync(exePath);
         }
 

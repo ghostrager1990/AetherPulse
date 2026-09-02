@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
 using System.Threading.Tasks;
 using AppUI.Models;
 
@@ -10,128 +9,106 @@ namespace AppUI.Services
     public interface IDeploymentService
     {
         bool IsDeployed(string executablePath, DeploymentMode mode);
-        Task<DeploymentResult> DeployAsync(string executablePath, DeploymentMode mode, string? customIniPath = null);
+        Task<DeploymentResult> DeployAsync(string executablePath, DeploymentMode mode, string targetProxyDllName = "dxgi.dll", string? customIniPath = null);
         Task<DeploymentResult> UninstallAsync(string executablePath, DeploymentMode mode);
-        string? FindDxgiDllPath();
-        string? FindStreamlineDllPath();
+        string? FindPayloadDllPath();
         string? FindDefaultIniPath();
     }
 
     public class DeploymentService : IDeploymentService
     {
-        public const string BackupFolderName = "AetherDLLBackup";
-        public const string ManifestFileName = "aether_manifest.json";
-
-        public string? FindDxgiDllPath()
+        private static string? ResolveCandidatePath(params string[] relativePaths)
         {
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string[] candidates = {
-                @"G:\Antigravity Projects\AetherPulse-v1.2.0\src\NativeCore\build\Release\dxgi.dll",
-                Path.Combine(baseDir, "Redist", "dxgi.dll")
-            };
-            foreach (var p in candidates) if (File.Exists(p)) return p;
+            string baseDir = AppContext.BaseDirectory;
+            foreach (var rel in relativePaths)
+            {
+                string full = Path.GetFullPath(Path.Combine(baseDir, rel));
+                if (File.Exists(full)) return full;
+            }
             return null;
         }
 
-        public string? FindStreamlineDllPath()
-        {
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string[] candidates = {
-                @"G:\Antigravity Projects\AetherPulse-v1.2.0\src\NativeCore\build\Release\sl.interposer.dll",
-                Path.Combine(baseDir, "Redist", "sl.interposer.dll")
-            };
-            foreach (var p in candidates) if (File.Exists(p)) return p;
-            return null;
-        }
+        public string? FindPayloadDllPath() =>
+            ResolveCandidatePath(
+                Path.Combine("Redist", "dxgi.dll"),
+                "dxgi.dll",
+                Path.Combine("..", "..", "..", "..", "NativeCore", "build", "Release", "dxgi.dll"));
 
-        public string? FindDefaultIniPath()
-        {
-            string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            string[] candidates = {
-                Path.Combine(baseDir, "aetherpulse.ini"),
-                @"G:\Antigravity Projects\AetherPulse-v1.2.0\aetherpulse.ini"
-            };
-            foreach (var p in candidates) if (File.Exists(p)) return p;
-            return null;
-        }
+        public string? FindDefaultIniPath() =>
+            ResolveCandidatePath(
+                "aetherpulse.ini",
+                Path.Combine("..", "..", "..", "..", "aetherpulse.ini"));
 
         public bool IsDeployed(string executablePath, DeploymentMode mode)
         {
             if (string.IsNullOrWhiteSpace(executablePath)) return false;
-            string targetDir = Path.GetDirectoryName(executablePath) ?? "";
+            string targetDir = GameBackupService.ResolveGameDirectory(executablePath);
             if (!Directory.Exists(targetDir)) return false;
 
-            return File.Exists(Path.Combine(targetDir, "dxgi.dll"));
+            // 1. Check if an active backup manifest exists
+            if (GameBackupService.HasExistingBackup(targetDir))
+            {
+                var manifest = GameBackupService.LoadManifest(targetDir);
+                if (manifest != null && manifest.InjectedFiles.Count > 0)
+                {
+                    return true;
+                }
+            }
+
+            // 2. Fallback check for common proxy entry points
+            return File.Exists(Path.Combine(targetDir, "dxgi.dll")) ||
+                   File.Exists(Path.Combine(targetDir, "version.dll")) ||
+                   File.Exists(Path.Combine(targetDir, "d3d12.dll"));
         }
 
-        public async Task<DeploymentResult> DeployAsync(string executablePath, DeploymentMode mode, string? customIniPath = null)
+        public async Task<DeploymentResult> DeployAsync(string executablePath, DeploymentMode mode, string targetProxyDllName = "dxgi.dll", string? customIniPath = null)
         {
             return await Task.Run(() =>
             {
                 var result = new DeploymentResult();
                 try
                 {
-                    string targetDir = Path.GetDirectoryName(executablePath) ?? "";
+                    string targetDir = GameBackupService.ResolveGameDirectory(executablePath);
                     if (!Directory.Exists(targetDir))
                     {
                         result.Status = DeploymentStatus.Failed;
-                        result.Message = "Target directory does not exist.";
+                        result.Message = "Target game directory does not exist.";
                         return result;
                     }
 
-                    string checkBackupDir = Path.Combine(targetDir, BackupFolderName);
-                    string manifestPath = Path.Combine(checkBackupDir, ManifestFileName);
-
-                    // Atomic safety check: If backup folder or manifest already exists, prevent re-deployment overwrite
-                    if (Directory.Exists(checkBackupDir) && (File.Exists(manifestPath) || File.Exists(Path.Combine(checkBackupDir, "dxgi.dll"))))
+                    if (GameBackupService.HasExistingBackup(targetDir))
                     {
                         result.Status = DeploymentStatus.Failed;
-                        result.Message = "Original files already backed up. Deployment halted to prevent overwriting original binaries.";
+                        result.Message = "Original files are already backed up. Please uninstall existing deployment first.";
                         return result;
                     }
 
-                    string? dxgiSrc = FindDxgiDllPath();
-                    string? slSrc   = FindStreamlineDllPath();
-                    string? iniSrc  = customIniPath ?? FindDefaultIniPath();
-
-                    string backupDir = Path.Combine(targetDir, BackupFolderName);
-                    Directory.CreateDirectory(backupDir);
-
-                    var manifest = new BackupManifest
+                    string? payloadDllSrc = FindPayloadDllPath();
+                    if (string.IsNullOrEmpty(payloadDllSrc) || !File.Exists(payloadDllSrc))
                     {
-                        InstalledAt = DateTime.UtcNow
+                        result.Status = DeploymentStatus.Failed;
+                        result.Message = "AetherPulse core hook binary could not be found.";
+                        return result;
+                    }
+
+                    string? iniSrc = customIniPath ?? FindDefaultIniPath();
+
+                    // Prepare files to inject: Selected proxy name (e.g. dxgi.dll or version.dll) + INI
+                    var filesToDeploy = new Dictionary<string, string>
+                    {
+                        { targetProxyDllName, payloadDllSrc }
                     };
 
-                    // 1. Deploy dxgi.dll (Always)
-                    if (dxgiSrc != null && File.Exists(dxgiSrc))
+                    if (!string.IsNullOrEmpty(iniSrc) && File.Exists(iniSrc))
                     {
-                        string destDxgi = Path.Combine(targetDir, "dxgi.dll");
-                        string backupDxgi = Path.Combine(backupDir, "dxgi.dll");
-                        if (File.Exists(destDxgi) && !File.Exists(backupDxgi))
-                        {
-                            File.Copy(destDxgi, backupDxgi, true);
-                        }
-                        File.Copy(dxgiSrc, destDxgi, true);
-                        result.DeployedFiles.Add("dxgi.dll");
-                        manifest.InjectedFiles.Add("dxgi.dll");
+                        filesToDeploy["aetherpulse.ini"] = iniSrc;
                     }
 
-// Legacy interposer handling decoupled
-
-                    // 3. Deploy INI Config (Always)
-                    if (iniSrc != null && File.Exists(iniSrc))
-                    {
-                        string destIni = Path.Combine(targetDir, "aetherpulse.ini");
-                        File.Copy(iniSrc, destIni, true);
-                        result.DeployedFiles.Add("aetherpulse.ini");
-                        manifest.InjectedFiles.Add("aetherpulse.ini");
-                    }
-
-                    string json = JsonSerializer.Serialize(manifest, new JsonSerializerOptions { WriteIndented = true });
-                    File.WriteAllText(Path.Combine(backupDir, ManifestFileName), json);
+                    GameBackupService.DeployAndBackup(targetDir, filesToDeploy);
+                    result.DeployedFiles.AddRange(filesToDeploy.Keys);
 
                     result.Status = DeploymentStatus.Success;
-                    result.Message = $"Successfully deployed AetherPulse Pacing Hook ({result.DeployedFiles.Count} components: dxgi.dll + ini).";
+                    result.Message = $"Successfully deployed AetherPulse as {targetProxyDllName} ({result.DeployedFiles.Count} components).";
                     return result;
                 }
                 catch (Exception ex)
@@ -150,43 +127,19 @@ namespace AppUI.Services
                 var result = new DeploymentResult();
                 try
                 {
-                    string targetDir = Path.GetDirectoryName(executablePath) ?? "";
-                    string backupDir = Path.Combine(targetDir, BackupFolderName);
-                    string manifestPath = Path.Combine(backupDir, ManifestFileName);
-
-                    if (File.Exists(manifestPath))
+                    string targetDir = GameBackupService.ResolveGameDirectory(executablePath);
+                    if (!Directory.Exists(targetDir))
                     {
-                        var manifest = JsonSerializer.Deserialize<BackupManifest>(File.ReadAllText(manifestPath));
-                        if (manifest != null)
-                        {
-                            foreach (var file in manifest.InjectedFiles)
-                            {
-                                if (string.Equals(file, "sl.interposer.dll", StringComparison.OrdinalIgnoreCase)) continue;
-                                string targetFile = Path.Combine(targetDir, file);
-                                if (File.Exists(targetFile)) File.Delete(targetFile);
+                        result.Status = DeploymentStatus.Failed;
+                        result.Message = "Target game directory does not exist.";
+                        return result;
+                    }
 
-                                string backupFile = Path.Combine(backupDir, file);
-                                if (File.Exists(backupFile))
-                                {
-                                    File.Copy(backupFile, targetFile, true);
-                                }
-                            }
-                        }
-                        Directory.Delete(backupDir, true);
-                    }
-                    else
-                    {
-                        // Fallback manual cleanup
-                        string[] toClean = { "dxgi.dll", "aetherpulse.ini" };
-                        foreach (var f in toClean)
-                        {
-                            string p = Path.Combine(targetDir, f);
-                            if (File.Exists(p)) File.Delete(p);
-                        }
-                    }
+                    // Delegate complete rollback and artifact cleanup
+                    GameBackupService.UninstallAndRestore(targetDir);
 
                     result.Status = DeploymentStatus.Success;
-                    result.Message = "Full deployment removed and original files restored.";
+                    result.Message = "Deployment removed and original files restored.";
                     return result;
                 }
                 catch (Exception ex)
@@ -199,6 +152,3 @@ namespace AppUI.Services
         }
     }
 }
-
-
-

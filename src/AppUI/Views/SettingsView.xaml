@@ -1,4 +1,4 @@
-﻿<UserControl x:Class="AppUI.Views.SettingsView"
+<UserControl x:Class="AppUI.Views.SettingsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
@@ -88,12 +88,16 @@
 
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
                             <Button Content="Top Left" Style="{StaticResource FpsSelectBtn}" Height="30" Padding="10,0" Margin="0,0,6,0"
+                                    Tag="{Binding IsTopLeftActive}"
                                     Command="{Binding SetHudPositionCommand}" CommandParameter="Top Left" />
                             <Button Content="Top Right" Style="{StaticResource FpsSelectBtn}" Height="30" Padding="10,0" Margin="0,0,6,0"
+                                    Tag="{Binding IsTopRightActive}"
                                     Command="{Binding SetHudPositionCommand}" CommandParameter="Top Right" />
                             <Button Content="Bottom Left" Style="{StaticResource FpsSelectBtn}" Height="30" Padding="10,0" Margin="0,0,6,0"
+                                    Tag="{Binding IsBottomLeftActive}"
                                     Command="{Binding SetHudPositionCommand}" CommandParameter="Bottom Left" />
                             <Button Content="Bottom Right" Style="{StaticResource FpsSelectBtn}" Height="30" Padding="10,0" Margin="0"
+                                    Tag="{Binding IsBottomRightActive}"
                                     Command="{Binding SetHudPositionCommand}" CommandParameter="Bottom Right" />
                         </StackPanel>
                     </Grid>
