@@ -41,3 +41,7 @@
 *.dmp
 *.crash
 build_log.txt
+
+# Build outputs and releases
+/publish/
+*.zip
